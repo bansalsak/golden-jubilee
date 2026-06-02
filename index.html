@@ -388,10 +388,18 @@ const CONFIG = {
   <!-- Step 1: Take Selfie -->
   <div class="card" id="selfie-section">
     <div class="card-title">
-      <div class="step-num">1</div>
-      Take a quick selfie
-    </div>
-    <p>We'll find all the photos you're in — only you can see them.</p>
+  <div class="step-num">1</div>
+  Take 3 quick selfies
+</div>
+
+<p>
+Capture three photos:
+<br>• Looking straight ahead
+<br>• Looking slightly left
+<br>• Looking slightly right
+<br><br>
+This helps us find your photos more accurately.
+</p>
 
     <div id="camera-placeholder" class="video-placeholder" onclick="startCamera()">
       <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -477,7 +485,8 @@ const CONFIG = {
 let stream = null;
 let descriptorsData = [];
 let photoMap = {};
-let selfieDescriptor = null;
+let selfieDescriptors = [];
+let currentSelfieStep = 0;
 let capturedImageData = null;
 let matchedPhotos = [];
 let modelsLoaded = false;
@@ -520,22 +529,28 @@ async function startCamera() {
     showStatus('status-models', 'Could not access camera. Please allow camera permission and refresh.', true);
     document.getElementById('status-models').classList.add('show');
   }
+  <div id="selfie-instruction"
+     style="text-align:center;margin:12px 0;color:var(--gold-light);">
+  Look straight at the camera
+</div>
 }
+  
   
 // ══════════════════════════════════════
 //  FIND MATCHES IN DESCRIPTORS.JSON
 // ══════════════════════════════════════
 
-function findMatches(selfieDescriptor) {
+function findMatches(selfieDescriptors) {
 
   const matches = [];
 
   for (const item of descriptorsData) {
 
-    const dist = distance(
-      selfieDescriptor,
-      item.descriptor
-    );
+    const dist = Math.min(
+  ...selfieDescriptors.map(desc =>
+    distance(desc, item.descriptor)
+  )
+);
 
     if (dist < CONFIG.FACE_THRESHOLD) {
 
@@ -625,10 +640,29 @@ async function captureAndSearch() {
     return;
   }
 
-  selfieDescriptor = detection.descriptor;
+  selfieDescriptors.push(detection.descriptor);
+
+currentSelfieStep++;
+
+if (currentSelfieStep === 1) {
+  document.getElementById('selfie-instruction').innerText =
+    'Turn slightly LEFT';
+
+  retakeForNextSelfie();
+  return;
+}
+
+if (currentSelfieStep === 2) {
+  document.getElementById('selfie-instruction').innerText =
+    'Turn slightly RIGHT';
+
+  retakeForNextSelfie();
+  return;
+}
+
 document.getElementById('status-models').classList.remove('show');
 
-showResults(findMatches(selfieDescriptor));
+showResults(findMatches(selfieDescriptors));
 }
 
 // ══════════════════════════════════════
@@ -773,6 +807,14 @@ function retakePhoto() {
   document.getElementById('camera-wrap').innerHTML = `<video id="video" autoplay playsinline muted></video><canvas id="overlay-canvas"></canvas>`;
   document.getElementById('status-models').classList.remove('show');
   selfieDescriptor = null;
+  startCamera();
+}
+function retakeForNextSelfie() {
+
+  document.getElementById('camera-wrap').innerHTML =
+    `<video id="video" autoplay playsinline muted></video>
+     <canvas id="overlay-canvas"></canvas>`;
+
   startCamera();
 }
 
