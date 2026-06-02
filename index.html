@@ -148,6 +148,21 @@
   }
   .video-wrap canvas { pointer-events: none; }
 
+  /* ── Camera Flash Effect ── */
+  .camera-flash {
+    position: absolute; inset: 0;
+    background: #ffffff;
+    opacity: 0; pointer-events: none;
+    z-index: 10;
+  }
+  .flash-anim {
+    animation: flashObj 0.6s ease-out;
+  }
+  @keyframes flashObj {
+    0% { opacity: 0.8; }
+    100% { opacity: 0; }
+  }
+
   .video-placeholder {
     width: 200px; height: 200px;
     margin: 20px auto;
@@ -409,8 +424,9 @@ const CONFIG = {
 
     <div id="camera-wrap" class="video-wrap" style="display:none;">
       <video id="video" autoplay playsinline muted></video>
-      <canvas id="overlay-canvas"></canvas>
+      <div id="flash-overlay" class="camera-flash"></div>
     </div>
+    
     <div id="selfie-instruction" style="display:none;text-align:center;margin:12px 0;color:var(--gold-light);">
       Look straight at the camera
     </div>
@@ -487,7 +503,6 @@ let photoMap = {};
 let selfieDescriptors = [];
 let currentSelfieStep = 0;
 let capturedImageData = null;
-let matchedPhotos = [];
 let modelsLoaded = false;
 let modelsLoading = false;
 
@@ -522,12 +537,14 @@ async function startCamera() {
 
     // Setup UI
     document.getElementById('btn-capture').style.display = 'block';
-    document.getElementById('btn-capture').disabled = true;
+    
+    // Only disable if models haven't finished loading yet
+    document.getElementById('btn-capture').disabled = !modelsLoaded;
 
     // Load models in background
     if (!modelsLoaded && !modelsLoading) {
       modelsLoading = true;
-      loadModels(); // no await
+      loadModels(); 
     }
   } catch (err) {
     showStatus('status-models', 'Could not access camera. Please allow camera permission and refresh.', true);
@@ -575,7 +592,6 @@ async function captureAndSearch() {
     return;
   }
 
-  // Hide error/status messages
   document.getElementById('status-models').classList.remove('show');
 
   const video = document.getElementById('video');
@@ -585,12 +601,20 @@ async function captureAndSearch() {
   canvas.getContext('2d').drawImage(video, 0, 0);
   capturedImageData = canvas.toDataURL('image/jpeg', 0.9);
 
-  // Briefly show the captured image so the user knows it worked
+  // Trigger Flash Effect
+  const flash = document.getElementById('flash-overlay');
+  if (flash) {
+    flash.classList.remove('flash-anim');
+    void flash.offsetWidth; // Restart animation
+    flash.classList.add('flash-anim');
+  }
+
+  // Briefly show the captured image
   document.getElementById('camera-wrap').innerHTML = `
     <img src="${capturedImageData}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
   `;
 
-  // Detect face in the background
+  // Detect face
   const img = await faceapi.fetchImage(capturedImageData);
   const detection = await faceapi
     .detectSingleFace(img, new faceapi.TinyFaceDetectorOptions())
@@ -610,7 +634,7 @@ async function captureAndSearch() {
   currentSelfieStep++;
 
   if (currentSelfieStep < 3) {
-    // Keep showing their captured photo for 800ms, then switch back to camera
+    // Keep showing their captured photo for 800ms before switching back
     setTimeout(() => {
       if (currentSelfieStep === 1) {
         document.getElementById('selfie-instruction').innerText = 'Great! Now turn slightly LEFT';
@@ -628,14 +652,13 @@ async function captureAndSearch() {
       stream = null;
     }
 
-    // Switch UI to loading screen
     document.getElementById('selfie-section').style.display = 'none';
     document.getElementById('results-section').style.display = 'block';
     document.getElementById('status-scanning').classList.add('show');
     document.getElementById('scan-status-text').textContent = 'Searching the archives...';
     document.getElementById('progress-wrap').classList.remove('show');
 
-    // Yield to the browser for 50ms so it draws the UI before freezing with heavy math
+    // Yield for 50ms so UI updates before heavy math freezes thread
     setTimeout(() => {
       const matches = findMatches(selfieDescriptors);
       document.getElementById('status-scanning').classList.remove('show');
@@ -648,14 +671,12 @@ async function captureAndSearch() {
 //  FIND MATCHES (WITH DEDUPLICATION)
 // ══════════════════════════════════════
 function findMatches(selfieDescriptors) {
-  const bestMatches = {}; // Use an object to prevent duplicate photos
+  const bestMatches = {}; 
 
   for (const item of descriptorsData) {
-    // Find how close this face is to any of the 3 selfies
     const dist = Math.min(...selfieDescriptors.map(desc => distance(desc, item.descriptor)));
 
     if (dist < CONFIG.FACE_THRESHOLD) {
-      // If we haven't added this photo yet, OR if this face is a closer match
       if (!bestMatches[item.photo] || bestMatches[item.photo].distance > dist) {
         bestMatches[item.photo] = {
           photo: item.photo,
@@ -666,7 +687,6 @@ function findMatches(selfieDescriptors) {
     }
   }
 
-  // Convert the object back to an array and sort by best match
   const matches = Object.values(bestMatches);
   matches.sort((a, b) => a.distance - b.distance);
 
@@ -751,16 +771,22 @@ function showStatus(id, msg, isError) {
 
 function retakePhoto() {
   document.getElementById('btn-retake').style.display = 'none';
+  document.getElementById('btn-capture').style.display = 'block';
+  document.getElementById('status-models').classList.remove('show');
+  
   document.getElementById('camera-wrap').innerHTML =
     `<video id="video" autoplay playsinline muted></video>
-     <canvas id="overlay-canvas"></canvas>`;
-  startCamera();
+     <div id="flash-overlay" class="camera-flash"></div>`;
+     
+  const video = document.getElementById('video');
+  video.srcObject = stream;
+  video.play();
 }
   
 async function retakeForNextSelfie() {
   document.getElementById('camera-wrap').innerHTML =
     `<video id="video" autoplay playsinline muted></video>
-     <canvas id="overlay-canvas"></canvas>`;
+     <div id="flash-overlay" class="camera-flash"></div>`;
   const video = document.getElementById('video');
   video.srcObject = stream;
   await video.play();
@@ -780,13 +806,10 @@ function resetSearch() {
   document.getElementById('btn-capture').style.display = 'none';
   document.getElementById('btn-retake').style.display = 'none';
   
-  // Reset all state
-  matchedPhotos = [];
   selfieDescriptors = [];
   currentSelfieStep = 0;
   capturedImageData = null;
   
-  // Reset UI text
   document.getElementById('selfie-instruction').innerText = 'Look straight at the camera';
   document.getElementById('selfie-instruction').style.display = 'none';
   document.getElementById('btn-capture').innerText = '✦ Capture (1/3)';
