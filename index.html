@@ -368,19 +368,8 @@
 <!-- ══ CONFIG — EDIT THESE ══ -->
 <script>
 const CONFIG = {
-  // Get this from Google Cloud Console (see README)
-  API_KEY: 'AIzaSyC5xjFVXVtafkmvRJk1yd88ijcaEkfNbDo',
-  
-  // The Google Drive Folder ID containing all your photos
-  // (last part of the folder URL: drive.google.com/drive/folders/FOLDER_ID_HERE)
-  FOLDER_ID: '1jQ21jZWB6aMV4kNGebSf2DByoj6JaKQD',
-  
-  // How strict face matching is (lower = more strict, higher = more lenient)
-  // Recommended: 0.5 to 0.6
-  FACE_THRESHOLD: 0.4,
-  
-  // Event name shown on page
-  EVENT_NAME: "Dada Dadi's Golden Jubilee",
+  FACE_THRESHOLD: 0.45,
+  EVENT_NAME: "Dada Dadi's Golden Jubilee"
 };
 </script>
 
@@ -486,14 +475,27 @@ const CONFIG = {
 //  STATE
 // ══════════════════════════════════════
 let stream = null;
+let descriptorsData = [];
+let photoMap = {};
 let selfieDescriptor = null;
 let capturedImageData = null;
-let allPhotoFiles = [];
 let matchedPhotos = [];
 let modelsLoaded = false;
 
 const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
 
+// ══════════════════════════════════════
+//  LOAD DESCRIPTORS + PHOTO MAP
+// ══════════════════════════════════════
+
+async function loadData() {
+  descriptorsData = await fetch('./descriptors.json').then(r => r.json());
+  photoMap = await fetch('./photo-map.json').then(r => r.json());
+
+  console.log(`Loaded ${descriptorsData.length} descriptors`);
+  console.log(`Loaded ${Object.keys(photoMap).length} photo mappings`);
+}
+  
 // ══════════════════════════════════════
 //  CAMERA
 // ══════════════════════════════════════
@@ -519,7 +521,38 @@ async function startCamera() {
     document.getElementById('status-models').classList.add('show');
   }
 }
+  
+// ══════════════════════════════════════
+//  FIND MATCHES IN DESCRIPTORS.JSON
+// ══════════════════════════════════════
 
+function findMatches(selfieDescriptor) {
+
+  const matches = [];
+
+  for (const item of descriptorsData) {
+
+    const dist = distance(
+      selfieDescriptor,
+      item.descriptor
+    );
+
+    if (dist < CONFIG.FACE_THRESHOLD) {
+
+      matches.push({
+        photo: item.photo,
+        driveId: photoMap[item.photo],
+        distance: dist
+      });
+
+    }
+  }
+
+  matches.sort((a, b) => a.distance - b.distance);
+
+  return matches;
+}
+  
 // ══════════════════════════════════════
 //  FACE-API MODELS
 // ══════════════════════════════════════
@@ -528,15 +561,20 @@ async function loadModels() {
   statusBox.classList.add('show');
 
   try {
-    await Promise.all([
-      faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
-      faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL),
-      faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
-    ]);
-    modelsLoaded = true;
-    statusBox.classList.remove('show');
-    document.getElementById('btn-capture').disabled = false;
-  } catch (err) {
+  await Promise.all([
+    faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+    faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL),
+    faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
+  ]);
+
+  // Load your pre-generated data
+  await loadData();
+
+  modelsLoaded = true;
+  statusBox.classList.remove('show');
+  document.getElementById('btn-capture').disabled = false;
+
+} catch (err) { {
     showStatus('status-models', 'Failed to load face models. Check your internet connection.', true);
     statusBox.classList.add('show');
   }
@@ -590,107 +628,24 @@ async function captureAndSearch() {
   selfieDescriptor = detection.descriptor;
   document.getElementById('status-models').classList.remove('show');
 
-  // Start searching
-  startSearch();
-}
+  showResults(findMatches(selfieDescriptor));
 
 // ══════════════════════════════════════
-//  GOOGLE DRIVE: FETCH ALL PHOTOS
+//  DESCRIPTOR DISTANCE
 // ══════════════════════════════════════
-async function fetchAllPhotoFiles() {
-  let files = [];
-  let pageToken = null;
 
-  do {
-    let url = `https://www.googleapis.com/drive/v3/files?q='${CONFIG.FOLDER_ID}'+in+parents+and+mimeType+contains+'image/'&fields=nextPageToken,files(id,name,thumbnailLink,webContentLink,webViewLink)&pageSize=1000&key=${CONFIG.API_KEY}`;
-    if (pageToken) url += `&pageToken=${pageToken}`;
+function distance(a, b) {
+  let sum = 0;
 
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`Drive API error: ${res.status} — check your API_KEY and FOLDER_ID in CONFIG`);
-    const data = await res.json();
-    files = files.concat(data.files || []);
-    pageToken = data.nextPageToken || null;
-  } while (pageToken);
-
-  return files;
-}
-
-// ══════════════════════════════════════
-//  MAIN SEARCH FLOW
-// ══════════════════════════════════════
-async function startSearch() {
-  document.getElementById('selfie-section').style.display = 'none';
-  document.getElementById('results-section').style.display = 'block';
-  document.getElementById('status-scanning').classList.add('show');
-  document.getElementById('scan-status-text').textContent = 'Fetching your photo collection…';
-
-  matchedPhotos = [];
-
-  try {
-    // 1. Fetch file list from Drive
-    allPhotoFiles = await fetchAllPhotoFiles();
-    const total = allPhotoFiles.length;
-
-    document.getElementById('scan-status-text').textContent = `Scanning ${total} photos for your face…`;
-    document.getElementById('progress-wrap').classList.add('show');
-
-    const matcher = new faceapi.FaceMatcher(
-      [new faceapi.LabeledFaceDescriptors('guest', [selfieDescriptor])],
-      CONFIG.FACE_THRESHOLD
-    );
-
-    // 2. Process in batches of 5 for speed
-    const BATCH = 5;
-    for (let i = 0; i < total; i += BATCH) {
-      const batch = allPhotoFiles.slice(i, i + BATCH);
-
-      await Promise.all(batch.map(async (file) => {
-        try {
-          // Use thumbnail for fast face detection (640px)
-          const thumbUrl = file.thumbnailLink
-            ? file.thumbnailLink.replace('=s220', '=s640')
-            : `https://drive.google.com/thumbnail?id=${file.id}&sz=640`;
-
-          const img = await faceapi.fetchImage(thumbUrl);
-          const detections = await faceapi
-            .detectAllFaces(img, new faceapi.TinyFaceDetectorOptions())
-            .withFaceLandmarks(true)
-            .withFaceDescriptors();
-
-          for (const det of detections) {
-            const match = matcher.findBestMatch(det.descriptor);
-            if (match.label === 'guest') {
-              matchedPhotos.push({ file, score: (1 - match.distance) });
-              renderPhoto({ file, score: (1 - match.distance) });
-              break;
-            }
-          }
-        } catch (_) { /* skip unreadable photos */ }
-      }));
-
-      // Update progress
-      const pct = Math.round(((i + BATCH) / total) * 100);
-      document.getElementById('progress-bar').style.width = Math.min(pct, 100) + '%';
-      document.getElementById('progress-label').textContent = `Scanned ${Math.min(i + BATCH, total)} of ${total} photos — found ${matchedPhotos.length} so far`;
-    }
-
-    // Done
-    document.getElementById('status-scanning').classList.remove('show');
-    document.getElementById('progress-wrap').classList.remove('show');
-
-    if (matchedPhotos.length === 0) {
-      document.getElementById('no-results').classList.add('show');
-    } else {
-      document.getElementById('results-count-badge').textContent = `${matchedPhotos.length} photos found`;
-      document.getElementById('download-all-wrap').style.display = 'block';
-    }
-
-  } catch (err) {
-    document.getElementById('scan-status-text').textContent = `Error: ${err.message}`;
-    document.getElementById('status-scanning').classList.add('error');
+  for (let i = 0; i < a.length; i++) {
+    const d = a[i] - b[i];
+    sum += d * d;
   }
+
+  return Math.sqrt(sum);
 }
 
+  
 // ══════════════════════════════════════
 //  RENDER A MATCHED PHOTO
 // ══════════════════════════════════════
@@ -713,15 +668,88 @@ function renderPhoto({ file, score }) {
   `;
   grid.appendChild(div);
 }
+  
+// ══════════════════════════════════════
+//  SHOW MATCH RESULTS
+// ══════════════════════════════════════
 
+function showResults(matches) {
+
+  document.getElementById('selfie-section').style.display = 'none';
+  document.getElementById('results-section').style.display = 'block';
+
+  const grid = document.getElementById('photos-grid');
+
+  grid.innerHTML = '';
+
+  document.getElementById('no-results').classList.remove('show');
+
+  if (matches.length === 0) {
+    document.getElementById('no-results').classList.add('show');
+    return;
+  }
+
+  document.getElementById('results-count-badge').textContent =
+    `${matches.length} photos found`;
+
+  document.getElementById('download-all-wrap').style.display = 'block';
+
+  for (const match of matches) {
+
+    const thumbUrl =
+      `https://drive.google.com/thumbnail?id=${match.driveId}&sz=w800`;
+
+    const viewUrl =
+      `https://drive.google.com/file/d/${match.driveId}/view`;
+
+    const confidence =
+      Math.round((1 - match.distance) * 100);
+
+    const card = document.createElement('div');
+
+    card.className = 'photo-item';
+
+    card.innerHTML = `
+  <img src="${thumbUrl}" alt="Memory">
+
+  <div class="confidence">
+    ${confidence}%
+  </div>
+
+  <a class="dl-btn"
+     href="${viewUrl}"
+     target="_blank"
+     onclick="event.stopPropagation()">
+     View
+  </a>
+`;
+
+    card.onclick = () => {
+  openLightbox(
+    thumbUrl,
+    viewUrl
+  );
+};
+    grid.appendChild(card);
+  }
+}
+  
 // ══════════════════════════════════════
 //  LIGHTBOX
 // ══════════════════════════════════════
-function openLightbox(imgUrl, downloadUrl, viewUrl) {
+function openLightbox(imgUrl, viewUrl) {
+
   document.getElementById('lightbox-img').src = imgUrl;
-  document.getElementById('lightbox-dl').href = downloadUrl;
+
+  document.getElementById('lightbox-dl').href =
+    viewUrl;
+
+  document.getElementById('lightbox-dl').innerText =
+    'View & Download Original';
+
   document.getElementById('lightbox').classList.add('open');
 }
+  
 function closeLightbox(e) {
   if (!e || e.target === document.getElementById('lightbox') || e.target.classList.contains('lightbox-close')) {
     document.getElementById('lightbox').classList.remove('open');
