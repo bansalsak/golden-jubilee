@@ -368,7 +368,7 @@
 <!-- ══ CONFIG — EDIT THESE ══ -->
 <script>
 const CONFIG = {
-  FACE_THRESHOLD: 0.45,
+  FACE_THRESHOLD: 0.5,
   EVENT_NAME: "Dada Dadi's Golden Jubilee"
 };
 </script>
@@ -755,9 +755,14 @@ function showResults(matches) {
     const viewUrl =
       `https://drive.google.com/file/d/${match.driveId}/view`;
 
-    const confidence =
-      Math.round((1 - match.distance) * 100);
-
+    const confidence = Math.max(
+  0,
+  Math.min(
+    100,
+    Math.round((1 - match.distance) * 100)
+  )
+);
+    
     const card = document.createElement('div');
 
     card.className = 'photo-item';
@@ -855,6 +860,7 @@ function resetSearch() {
   matchedPhotos = [];
   selfieDescriptors = [];
   currentSelfieStep = 0;
+  capturedImageData = null;
   document.getElementById('selfie-instruction').innerText =
   'Look straight at the camera';
 
