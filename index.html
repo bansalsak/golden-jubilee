@@ -626,9 +626,10 @@ async function captureAndSearch() {
   }
 
   selfieDescriptor = detection.descriptor;
-  document.getElementById('status-models').classList.remove('show');
+document.getElementById('status-models').classList.remove('show');
 
-  showResults(findMatches(selfieDescriptor));
+showResults(findMatches(selfieDescriptor));
+}
 
 // ══════════════════════════════════════
 //  DESCRIPTOR DISTANCE
