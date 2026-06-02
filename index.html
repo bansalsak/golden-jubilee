@@ -527,12 +527,13 @@ async function startCamera() {
     await video.play();
 
     // Load models in background
-    if (!modelsLoaded && !modelsLoading) {
-  modelsLoading = true;
-  await loadModels();
-    }
-
     document.getElementById('btn-capture').style.display = 'block';
+document.getElementById('btn-capture').disabled = true;
+
+if (!modelsLoaded && !modelsLoading) {
+  modelsLoading = true;
+  loadModels(); // no await
+}
   } catch (err) {
     showStatus('status-models', 'Could not access camera. Please allow camera permission and refresh.', true);
     document.getElementById('status-models').classList.add('show');
@@ -593,13 +594,20 @@ async function loadModels() {
   await loadData();
 
   modelsLoaded = true;
-  statusBox.classList.remove('show');
+  modelsLoading = false;
   document.getElementById('btn-capture').disabled = false;
+  statusBox.classList.remove('show');
 
 } catch (err) { 
-    showStatus('status-models', 'Failed to load face models. Check your internet connection.', true);
-    statusBox.classList.add('show');
-  }
+    modelsLoading = false;
+
+  showStatus(
+    'status-models',
+    'Failed to load face models. Check your internet connection.',
+    true
+  );
+
+  statusBox.classList.add('show');
 }
 
 // ══════════════════════════════════════
