@@ -413,6 +413,10 @@ This helps us find your photos more accurately.
       <video id="video" autoplay playsinline muted></video>
       <canvas id="overlay-canvas"></canvas>
     </div>
+    <div id="selfie-instruction"
+     style="display:none;text-align:center;margin:12px 0;color:var(--gold-light);">
+  Look straight at the camera
+</div>
 
     <div id="status-models" class="status-box">
       <div class="spinner"></div>
@@ -490,6 +494,7 @@ let currentSelfieStep = 0;
 let capturedImageData = null;
 let matchedPhotos = [];
 let modelsLoaded = false;
+let modelsLoading = false;
 
 const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
 
@@ -522,19 +527,21 @@ async function startCamera() {
     await video.play();
 
     // Load models in background
-    loadModels();
+    if (!modelsLoaded && !modelsLoading) {
+  modelsLoading = true;
+  await loadModels();
+    }
 
     document.getElementById('btn-capture').style.display = 'block';
   } catch (err) {
     showStatus('status-models', 'Could not access camera. Please allow camera permission and refresh.', true);
     document.getElementById('status-models').classList.add('show');
   }
-  <div id="selfie-instruction"
-     style="text-align:center;margin:12px 0;color:var(--gold-light);">
-  Look straight at the camera
-</div>
+  document.getElementById('selfie-instruction').style.display = 'block';
+   
 }
   
+ 
   
 // ══════════════════════════════════════
 //  FIND MATCHES IN DESCRIPTORS.JSON
@@ -612,9 +619,6 @@ async function captureAndSearch() {
   canvas.getContext('2d').drawImage(video, 0, 0);
   capturedImageData = canvas.toDataURL('image/jpeg', 0.9);
 
-  // Stop camera
-  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
-
   // Show captured image
   document.getElementById('camera-wrap').innerHTML = `
     <img src="${capturedImageData}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
@@ -659,7 +663,11 @@ if (currentSelfieStep === 2) {
   retakeForNextSelfie();
   return;
 }
-
+if (currentSelfieStep === 3) {
+  if (stream) {
+    stream.getTracks().forEach(t => t.stop());
+    stream = null;
+  }
 document.getElementById('status-models').classList.remove('show');
 
 showResults(findMatches(selfieDescriptors));
@@ -804,18 +812,23 @@ function showStatus(id, msg, isError) {
 
 function retakePhoto() {
   document.getElementById('btn-retake').style.display = 'none';
-  document.getElementById('camera-wrap').innerHTML = `<video id="video" autoplay playsinline muted></video><canvas id="overlay-canvas"></canvas>`;
-  document.getElementById('status-models').classList.remove('show');
-  selfieDescriptor = null;
-  startCamera();
-}
-function retakeForNextSelfie() {
 
   document.getElementById('camera-wrap').innerHTML =
     `<video id="video" autoplay playsinline muted></video>
      <canvas id="overlay-canvas"></canvas>`;
 
   startCamera();
+}
+  
+async function retakeForNextSelfie() {
+  document.getElementById('camera-wrap').innerHTML =
+    `<video id="video" autoplay playsinline muted></video>
+     <canvas id="overlay-canvas"></canvas>`;
+  const video = document.getElementById('video');
+  video.srcObject = stream;
+  await video.play();
+  document.getElementById('btn-capture').style.display = 'block';
+  document.getElementById('btn-retake').style.display = 'none';
 }
 
 function resetSearch() {
@@ -830,7 +843,13 @@ function resetSearch() {
   document.getElementById('btn-capture').style.display = 'none';
   document.getElementById('btn-retake').style.display = 'none';
   matchedPhotos = [];
-  selfieDescriptor = null;
+  selfieDescriptors = [];
+  currentSelfieStep = 0;
+  document.getElementById('selfie-instruction').innerText =
+  'Look straight at the camera';
+
+document.getElementById('selfie-instruction').style.display =
+  'none';
 }
 </script>
 </body>
