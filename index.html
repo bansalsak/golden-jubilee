@@ -1,404 +1,525 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta property="og:title" content="Dada & Dadi's Golden Jubilee">
-<meta property="og:description" content="Take a quick selfie to instantly find your memories from the 50th Anniversary celebration! 💛">
-<meta property="og:image" content="https://bansalsak.github.io/golden-jubilee/cover-image.jpg">
-<meta property="og:url" content="https://bansalsak.github.io/golden-jubilee/">
-<meta property="og:type" content="website">
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<meta name="theme-color" content="#1A1008">
-<title>Dada Dadi's Golden Jubilee — Find Your Memories</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-<style>
-  :root {
-    --gold: #C9A84C;
-    --gold-light: #E8CC7A;
-    --gold-pale: #F5E9C8;
-    --deep: #1A1008;
-    --warm: #3D2B0E;
-    --cream: #FAF5E9;
-    --text: #2C1F0A;
-    --muted: #8A7355;
-    --white: #FFFDF6;
-  }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1A1008">
 
-  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  <!-- WhatsApp / Social Preview -->
+  <meta property="og:title" content="Dada & Dadi's Golden Jubilee — Find Your Photos">
+  <meta property="og:description" content="Take a quick selfie to find all your photos from the 50th Anniversary celebration! 💛">
+  <meta property="og:image" content="https://bansalsak.github.io/golden-jubilee/cover-image.jpg">
+  <meta property="og:url" content="https://bansalsak.github.io/golden-jubilee/">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
 
-  html, body {
-    min-height: 100vh;
-    background: var(--deep);
-    font-family: 'DM Sans', sans-serif;
-    color: var(--cream);
-    overflow-x: hidden;
-  }
+  <title>Dada & Dadi's Golden Jubilee — Find Your Photos</title>
 
-  /* ── Background ── */
-  body::before {
-    content: '';
-    position: fixed; inset: 0;
-    background:
-      radial-gradient(ellipse 80% 60% at 50% 0%, #3D2B0E 0%, transparent 70%),
-      radial-gradient(ellipse 60% 40% at 100% 100%, #2A1A06 0%, transparent 60%),
-      #1A1008;
-    z-index: 0;
-  }
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 
-  .grain {
-    position: fixed; inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-    pointer-events: none; z-index: 1; opacity: 0.4;
-  }
+  <!-- face-api loaded as module to avoid defer timing issues -->
+  <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
-  /* ── Layout ── */
-  .container { position: relative; z-index: 2; max-width: 480px; margin: 0 auto; padding: 0 20px 60px; }
+  <style>
+    /* ─────────────────────────────────────────
+       TOKENS
+    ───────────────────────────────────────── */
+    :root {
+      --gold:        #C9A84C;
+      --gold-light:  #E8CC7A;
+      --gold-pale:   #F5E9C8;
+      --deep:        #1A1008;
+      --warm:        #3D2B0E;
+      --cream:       #FAF5E9;
+      --muted:       #8A7355;
+      --white:       #FFFDF6;
+      --error:       #FF9999;
+      --error-bg:    rgba(200,60,60,0.10);
+      --error-border:rgba(200,60,60,0.30);
+    }
 
-  /* ── Header ── */
-  header {
-    text-align: center;
-    padding: 48px 0 32px;
-    animation: fadeDown 0.9s ease both;
-  }
+    /* ─────────────────────────────────────────
+       RESET & BASE
+    ───────────────────────────────────────── */
+    *, *::before, *::after {
+      margin: 0; padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    html, body {
+      min-height: 100vh;
+      background: var(--deep);
+      font-family: 'DM Sans', sans-serif;
+      color: var(--cream);
+      overflow-x: hidden;
+    }
 
-  .ornament {
-    display: flex; align-items: center; justify-content: center; gap: 12px;
-    margin-bottom: 20px;
-  }
-  .ornament-line { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
-  .ornament-diamond {
-    width: 8px; height: 8px;
-    background: var(--gold);
-    transform: rotate(45deg);
-    box-shadow: 0 0 12px var(--gold-light);
-  }
+    /* ─────────────────────────────────────────
+       BACKGROUND
+    ───────────────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 0%,  #3D2B0E 0%, transparent 70%),
+        radial-gradient(ellipse 60% 40% at 100% 100%, #2A1A06 0%, transparent 60%),
+        #1A1008;
+      z-index: 0;
+    }
+    .grain {
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 1; opacity: 0.4;
+    }
 
-  .years-badge {
-    display: inline-block;
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 13px;
-    font-weight: 400;
-    letter-spacing: 4px;
-    text-transform: uppercase;
-    color: var(--gold);
-    margin-bottom: 14px;
-  }
+    /* ─────────────────────────────────────────
+       LAYOUT
+    ───────────────────────────────────────── */
+    .container {
+      position: relative; z-index: 2;
+      max-width: 480px; margin: 0 auto;
+      padding: 0 20px 80px;
+    }
 
-  h1 {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(2rem, 8vw, 2.8rem);
-    font-weight: 300;
-    line-height: 1.15;
-    color: var(--white);
-    margin-bottom: 8px;
-  }
-  h1 em { font-style: italic; color: var(--gold-light); }
+    /* ─────────────────────────────────────────
+       HEADER
+    ───────────────────────────────────────── */
+    header {
+      text-align: center;
+      padding: 52px 0 36px;
+      animation: fadeDown 0.9s ease both;
+    }
+    .years-badge {
+      display: inline-block;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 12px; font-weight: 400;
+      letter-spacing: 5px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 16px;
+    }
+    .ornament {
+      display: flex; align-items: center;
+      justify-content: center; gap: 12px;
+      margin-bottom: 20px;
+    }
+    .ornament-line {
+      flex: 1; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    }
+    .ornament-diamond {
+      width: 8px; height: 8px;
+      background: var(--gold);
+      transform: rotate(45deg);
+      box-shadow: 0 0 12px var(--gold-light);
+    }
+    h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2.2rem, 9vw, 3rem);
+      font-weight: 300; line-height: 1.12;
+      color: var(--white); margin-bottom: 10px;
+    }
+    h1 em { font-style: italic; color: var(--gold-light); }
+    .tagline {
+      font-size: 12px; color: var(--muted);
+      letter-spacing: 2px; font-weight: 300;
+      text-transform: uppercase;
+    }
 
-  .tagline {
-    font-size: 13px;
-    color: var(--muted);
-    letter-spacing: 1px;
-    font-weight: 300;
-    margin-top: 10px;
-  }
+    /* ─────────────────────────────────────────
+       CARDS
+    ───────────────────────────────────────── */
+    .card {
+      background: rgba(255,253,246,0.04);
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 18px;
+      padding: 28px 24px;
+      margin-bottom: 16px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      animation: fadeUp 0.7s ease both;
+    }
+    .card-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.25rem; font-weight: 400;
+      color: var(--gold-light);
+      margin-bottom: 10px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .step-num {
+      width: 24px; height: 24px;
+      border: 1px solid var(--gold);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; color: var(--gold);
+      font-family: 'DM Sans', sans-serif;
+      flex-shrink: 0;
+    }
+    .card p {
+      font-size: 13px; color: var(--muted);
+      line-height: 1.7;
+    }
 
-  /* ── Cards ── */
-  .card {
-    background: rgba(255,253,246,0.04);
-    border: 1px solid rgba(201,168,76,0.2);
-    border-radius: 16px;
-    padding: 28px 24px;
-    margin-bottom: 16px;
-    backdrop-filter: blur(12px);
-    animation: fadeUp 0.7s ease both;
-  }
+    /* ─────────────────────────────────────────
+       CAMERA
+    ───────────────────────────────────────── */
+    .video-placeholder {
+      width: 200px; height: 200px;
+      margin: 22px auto;
+      border-radius: 50%;
+      border: 2px dashed rgba(201,168,76,0.35);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 10px; color: var(--muted);
+      font-size: 12px; text-align: center;
+      cursor: pointer;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .video-placeholder:hover {
+      border-color: var(--gold);
+      box-shadow: 0 0 24px rgba(201,168,76,0.2);
+    }
+    .video-placeholder svg { opacity: 0.45; }
 
-  .card-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.3rem;
-    font-weight: 400;
-    color: var(--gold-light);
-    margin-bottom: 8px;
-    display: flex; align-items: center; gap: 10px;
-  }
-  .card-title .step-num {
-    width: 24px; height: 24px;
-    border: 1px solid var(--gold);
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 11px; color: var(--gold);
-    font-family: 'DM Sans', sans-serif;
-    flex-shrink: 0;
-  }
+    .video-wrap {
+      position: relative;
+      width: 200px; height: 200px;
+      margin: 22px auto;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 2px solid rgba(201,168,76,0.45);
+      box-shadow:
+        0 0 0 6px rgba(201,168,76,0.07),
+        0 0 40px rgba(201,168,76,0.18);
+      display: none;
+    }
+    .video-wrap video {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+    .camera-flash {
+      position: absolute; inset: 0;
+      background: #fff;
+      opacity: 0; pointer-events: none; z-index: 10;
+    }
+    .camera-flash.flash { animation: flash 0.55s ease-out forwards; }
+    @keyframes flash {
+      0%   { opacity: 0.9; }
+      100% { opacity: 0;   }
+    }
 
-  .card p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+    /* Step counter dots */
+    .step-dots {
+      display: flex; justify-content: center; gap: 8px;
+      margin: 12px 0 4px;
+    }
+    .step-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: rgba(201,168,76,0.2);
+      border: 1px solid rgba(201,168,76,0.3);
+      transition: background 0.3s, transform 0.3s;
+    }
+    .step-dot.done  { background: var(--gold); transform: scale(1.1); }
+    .step-dot.active {
+      background: transparent;
+      border-color: var(--gold);
+      box-shadow: 0 0 6px var(--gold);
+    }
 
-  /* ── Selfie Area ── */
-  #selfie-section { animation-delay: 0.1s; }
+    .selfie-instruction {
+      text-align: center;
+      font-size: 13px; font-weight: 500;
+      color: var(--gold-light);
+      margin: 6px 0 14px;
+      min-height: 20px;
+      display: none;
+    }
 
-  .video-wrap {
-    position: relative;
-    width: 200px; height: 200px;
-    margin: 20px auto;
-    border-radius: 50%;
-    overflow: hidden;
-    border: 2px solid rgba(201,168,76,0.4);
-    box-shadow: 0 0 0 6px rgba(201,168,76,0.08), 0 0 40px rgba(201,168,76,0.15);
-  }
-  .video-wrap video, .video-wrap canvas { 
-    position: absolute; inset: 0; 
-    width: 100%; height: 100%; 
-    object-fit: cover;
-  }
-  .video-wrap canvas { pointer-events: none; }
+    /* ─────────────────────────────────────────
+       BUTTONS
+    ───────────────────────────────────────── */
+    .btn {
+      display: block; width: 100%;
+      padding: 15px 24px;
+      border: none; border-radius: 11px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px; font-weight: 500;
+      letter-spacing: 0.4px;
+      cursor: pointer;
+      transition: transform 0.22s, box-shadow 0.22s, opacity 0.22s;
+      position: relative; overflow: hidden;
+      text-align: center; text-decoration: none;
+    }
+    .btn::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: rgba(255,255,255,0.1);
+      opacity: 0; transition: opacity 0.18s;
+    }
+    .btn:active::after { opacity: 1; }
 
-  /* ── Camera Flash Effect ── */
-  .camera-flash {
-    position: absolute; inset: 0;
-    background: #ffffff;
-    opacity: 0; pointer-events: none;
-    z-index: 10;
-  }
-  .flash-anim {
-    animation: flashObj 0.6s ease-out;
-  }
-  @keyframes flashObj {
-    0% { opacity: 0.8; }
-    100% { opacity: 0; }
-  }
+    .btn-gold {
+      background: linear-gradient(135deg, var(--gold) 0%, #A8792A 100%);
+      color: var(--deep);
+      box-shadow: 0 4px 22px rgba(201,168,76,0.32);
+    }
+    .btn-gold:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 30px rgba(201,168,76,0.48);
+    }
+    .btn-gold:disabled {
+      opacity: 0.45; cursor: not-allowed;
+    }
+    .btn-outline {
+      background: transparent;
+      color: var(--gold);
+      border: 1px solid rgba(201,168,76,0.4);
+      margin-top: 10px;
+    }
+    .btn-outline:hover {
+      background: rgba(201,168,76,0.07);
+      border-color: var(--gold);
+    }
 
-  .video-placeholder {
-    width: 200px; height: 200px;
-    margin: 20px auto;
-    border-radius: 50%;
-    border: 2px dashed rgba(201,168,76,0.3);
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: 8px; color: var(--muted);
-    font-size: 12px; text-align: center;
-    cursor: pointer;
-    transition: border-color 0.3s, box-shadow 0.3s;
-  }
-  .video-placeholder:hover { border-color: var(--gold); box-shadow: 0 0 20px rgba(201,168,76,0.2); }
-  .video-placeholder svg { opacity: 0.5; }
+    /* ─────────────────────────────────────────
+       STATUS BOXES
+    ───────────────────────────────────────── */
+    .status-box {
+      background: rgba(201,168,76,0.08);
+      border: 1px solid rgba(201,168,76,0.22);
+      border-radius: 11px;
+      padding: 14px 16px;
+      margin: 14px 0;
+      font-size: 13px; color: var(--gold-light);
+      display: none; align-items: center; gap: 10px;
+      line-height: 1.55;
+    }
+    .status-box.show  { display: flex; }
+    .status-box.error {
+      background: var(--error-bg);
+      border-color: var(--error-border);
+      color: var(--error);
+    }
+    .spinner {
+      width: 18px; height: 18px; flex-shrink: 0;
+      border: 2px solid rgba(201,168,76,0.25);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+    }
 
-  /* ── Buttons ── */
-  .btn {
-    display: block; width: 100%;
-    padding: 15px 24px;
-    border: none; border-radius: 10px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px; font-weight: 500;
-    letter-spacing: 0.5px;
-    cursor: pointer;
-    transition: all 0.25s;
-    position: relative; overflow: hidden;
-  }
-  .btn::after {
-    content: '';
-    position: absolute; inset: 0;
-    background: rgba(255,255,255,0.1);
-    opacity: 0; transition: opacity 0.2s;
-  }
-  .btn:active::after { opacity: 1; }
+    /* ─────────────────────────────────────────
+       PROGRESS BAR
+    ───────────────────────────────────────── */
+    .progress-wrap {
+      height: 3px;
+      background: rgba(255,255,255,0.07);
+      border-radius: 2px; margin: 14px 0;
+      overflow: hidden; display: none;
+    }
+    .progress-wrap.show { display: block; }
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--gold), var(--gold-light));
+      border-radius: 2px;
+      transition: width 0.5s ease;
+      width: 0%;
+    }
+    .progress-label {
+      font-size: 11px; color: var(--muted);
+      text-align: center; margin-top: 5px;
+    }
 
-  .btn-gold {
-    background: linear-gradient(135deg, var(--gold) 0%, #A8792A 100%);
-    color: var(--deep);
-    box-shadow: 0 4px 20px rgba(201,168,76,0.3);
-  }
-  .btn-gold:hover { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(201,168,76,0.45); }
-  .btn-gold:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    /* ─────────────────────────────────────────
+       RESULTS
+    ───────────────────────────────────────── */
+    #results-section { display: none; }
 
-  .btn-outline {
-    background: transparent;
-    color: var(--gold);
-    border: 1px solid rgba(201,168,76,0.4);
-    margin-top: 10px;
-  }
-  .btn-outline:hover { background: rgba(201,168,76,0.08); border-color: var(--gold); }
+    .results-header {
+      text-align: center; margin-bottom: 26px;
+      animation: fadeDown 0.6s ease both;
+    }
+    .results-header h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2rem; font-weight: 300;
+      color: var(--white);
+    }
+    .results-header h2 em { font-style: italic; color: var(--gold-light); }
+    .results-header .sub {
+      font-size: 12px; color: var(--muted);
+      margin-top: 6px; letter-spacing: 1px;
+    }
+    .results-count {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--gold), #A8792A);
+      color: var(--deep);
+      font-size: 11px; font-weight: 500;
+      padding: 4px 14px; border-radius: 20px;
+      margin-top: 10px; letter-spacing: 0.5px;
+    }
 
-  /* ── Status Boxes ── */
-  .status-box {
-    background: rgba(201,168,76,0.08);
-    border: 1px solid rgba(201,168,76,0.2);
-    border-radius: 10px;
-    padding: 14px 16px;
-    margin: 14px 0;
-    font-size: 13px;
-    color: var(--gold-light);
-    display: none;
-    align-items: center; gap: 10px;
-    line-height: 1.5;
-  }
-  .status-box.show { display: flex; }
-  .status-box.error { background: rgba(200,60,60,0.1); border-color: rgba(200,60,60,0.3); color: #FF9999; }
+    /* ─────────────────────────────────────────
+       PHOTO GRID
+    ───────────────────────────────────────── */
+    .photos-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px; margin-bottom: 20px;
+    }
+    .photo-item {
+      position: relative;
+      border-radius: 12px; overflow: hidden;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(201,168,76,0.12);
+      cursor: pointer;
+      transition: transform 0.25s cubic-bezier(0.2,0.8,0.2,1), border-color 0.25s;
+    }
+    .photo-item:hover {
+      transform: scale(1.03);
+      border-color: rgba(201,168,76,0.38);
+    }
+    .photo-item img {
+      width: 100%; aspect-ratio: 1;
+      object-fit: cover; display: block;
+    }
 
-  .spinner {
-    width: 18px; height: 18px; flex-shrink: 0;
-    border: 2px solid rgba(201,168,76,0.3);
-    border-top-color: var(--gold);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
+    /* Skeleton shimmer */
+    .skeleton-card {
+      width: 100%; aspect-ratio: 1;
+      border-radius: 12px;
+      background: linear-gradient(
+        90deg,
+        rgba(255,253,246,0.03) 25%,
+        rgba(201,168,76,0.09) 50%,
+        rgba(255,253,246,0.03) 75%
+      );
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite linear;
+      border: 1px solid rgba(201,168,76,0.05);
+    }
+    @keyframes shimmer {
+      0%   { background-position:  200% 0; }
+      100% { background-position: -200% 0; }
+    }
 
-  .progress-bar-wrap {
-    height: 4px; background: rgba(255,255,255,0.08);
-    border-radius: 2px; margin: 12px 0; overflow: hidden; display: none;
-  }
-  .progress-bar-wrap.show { display: block; }
-  .progress-bar {
-    height: 100%;
-    background: linear-gradient(90deg, var(--gold), var(--gold-light));
-    border-radius: 2px;
-    transition: width 0.4s ease;
-    width: 0%;
-  }
-  .progress-label { font-size: 11px; color: var(--muted); text-align: center; margin-top: 4px; }
+    /* ─────────────────────────────────────────
+       LIGHTBOX
+    ───────────────────────────────────────── */
+    .lightbox {
+      display: none; position: fixed; inset: 0;
+      background: rgba(12,7,2,0.97);
+      z-index: 200;
+      flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 20px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .lightbox.open { display: flex; }
+    .lightbox-img-wrap {
+      flex: 1; display: flex;
+      align-items: center; justify-content: center;
+      width: 100%; max-width: 600px;
+    }
+    .lightbox img {
+      max-width: 100%; max-height: 68vh;
+      border-radius: 10px; object-fit: contain;
+      box-shadow: 0 12px 50px rgba(0,0,0,0.6);
+    }
+    .lightbox-close {
+      position: absolute; top: 16px; right: 16px;
+      background: rgba(255,255,255,0.08);
+      border: none; color: var(--white);
+      font-size: 18px; width: 44px; height: 44px;
+      border-radius: 50%; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s;
+    }
+    .lightbox-close:hover { background: rgba(255,255,255,0.16); }
 
-  /* ── Results Gallery ── */
-  #results-section { display: none; animation: fadeUp 0.5s ease both; }
+    .lightbox-actions {
+      display: flex; gap: 10px;
+      width: 100%; max-width: 440px;
+      margin-top: 20px; flex-shrink: 0;
+    }
+    .lightbox-actions .btn {
+      flex: 1; padding: 13px 12px;
+      font-size: 13px; margin: 0;
+    }
+    .btn-copy {
+      background: rgba(255,253,246,0.07);
+      border: 1px solid rgba(201,168,76,0.3);
+      color: var(--gold-light);
+    }
+    .btn-copy:hover { background: rgba(201,168,76,0.12); }
 
-  .results-header {
-    text-align: center;
-    margin-bottom: 24px;
-  }
-  .results-header h2 {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.8rem; font-weight: 300;
-    color: var(--white);
-  }
-  .results-header p { font-size: 13px; color: var(--muted); margin-top: 6px; }
-  .results-count {
-    display: inline-block;
-    background: linear-gradient(135deg, var(--gold), #A8792A);
-    color: var(--deep);
-    font-size: 12px; font-weight: 500;
-    padding: 4px 12px; border-radius: 20px;
-    margin-top: 10px;
-  }
+    /* ─────────────────────────────────────────
+       NO RESULTS
+    ───────────────────────────────────────── */
+    .no-results {
+      text-align: center; padding: 36px 20px;
+      display: none;
+    }
+    .no-results.show { display: block; }
+    .no-results h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.5rem; color: var(--gold-light);
+      margin-bottom: 10px;
+    }
+    .no-results p { font-size: 13px; color: var(--muted); line-height: 1.6; }
 
-  .photos-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-    margin-bottom: 20px;
-  }
+    /* ─────────────────────────────────────────
+       FOOTER
+    ───────────────────────────────────────── */
+    footer {
+      text-align: center; margin-top: 44px;
+      font-size: 11px;
+      color: rgba(138,115,85,0.45);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
 
-  .photo-item {
-    position: relative;
-    border-radius: 12px;
-    overflow: hidden;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(201,168,76,0.12);
-    cursor: pointer;
-    transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.25s;
-    animation: photoReveal 0.4s ease both;
-  }
-  .photo-item:hover { transform: scale(1.03); border-color: rgba(201,168,76,0.35); }
+    /* ─────────────────────────────────────────
+       ANIMATIONS
+    ───────────────────────────────────────── */
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-18px); }
+      to   { opacity: 1; transform: translateY(0);     }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0);    }
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes photoReveal {
+      from { opacity: 0; transform: scale(0.94); }
+      to   { opacity: 1; transform: scale(1);    }
+    }
 
-  .photo-item img {
-    width: 100%; aspect-ratio: 1;
-    object-fit: cover; display: block;
-  }
-
-  .photo-item .confidence {
-    position: absolute; top: 8px; left: 8px;
-    background: rgba(26,16,8,0.75);
-    border-radius: 4px; padding: 2px 6px;
-    font-size: 10px; color: var(--gold-light);
-    backdrop-filter: blur(4px);
-    border: 1px solid rgba(201,168,76,0.15);
-  }
-
-  /* ── Skeleton Loading Shimmer ── */
-  .skeleton-card {
-    width: 100%;
-    aspect-ratio: 1;
-    border-radius: 12px;
-    background: linear-gradient(90deg, rgba(255,253,246,0.03) 25%, rgba(201,168,76,0.08) 50%, rgba(255,253,246,0.03) 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite linear;
-    border: 1px solid rgba(201,168,76,0.05);
-  }
-  @keyframes shimmer {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-  }
-
-  /* ── Lightbox View ── */
-  .lightbox {
-    display: none; position: fixed; inset: 0;
-    background: rgba(15, 9, 4, 0.97);
-    z-index: 100;
-    align-items: center; justify-content: center;
-    padding: 20px;
-    backdrop-filter: blur(8px);
-  }
-  .lightbox.open { display: flex; }
-  .lightbox img { max-width: 100%; max-height: 75vh; border-radius: 8px; object-fit: contain; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
-  .lightbox-close {
-    position: absolute; top: 16px; right: 16px;
-    background: rgba(255,255,255,0.08); border: none;
-    color: white; font-size: 20px; width: 44px; height: 44px;
-    border-radius: 50%; cursor: pointer; display: flex;
-    align-items: center; justify-content: center;
-    transition: background 0.2s;
-  }
-  .lightbox-close:hover { background: rgba(255,255,255,0.15); }
-  
-  .lightbox-controls {
-    position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); 
-    display: flex; gap: 12px; width: 90%; max-width: 400px;
-  }
-  .lightbox-controls .btn { padding: 14px 16px; text-align: center; text-decoration: none; margin: 0; flex: 1; }
-
-  /* ── Download all ── */
-  .download-all-wrap { text-align: center; margin-top: 8px; }
-  .download-note { font-size: 11px; color: var(--muted); margin-top: 8px; }
-
-  /* ── No results ── */
-  .no-results {
-    text-align: center; padding: 32px 20px;
-    display: none;
-  }
-  .no-results.show { display: block; }
-  .no-results h3 {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.4rem; color: var(--gold-light); margin-bottom: 8px;
-  }
-  .no-results p { font-size: 13px; color: var(--muted); }
-
-  /* ── Footer ── */
-  footer {
-    text-align: center; margin-top: 40px;
-    font-size: 11px; color: rgba(138,115,85,0.5);
-    letter-spacing: 1px; text-transform: uppercase;
-  }
-
-  /* ── Animations ── */
-  @keyframes fadeDown { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:translateY(0); } }
-  @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  @keyframes photoReveal { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
-</style>
+    #selfie-section { animation-delay: 0.12s; }
+  </style>
 </head>
 <body>
 <div class="grain"></div>
 
+<!-- ═══════════════════════════════════
+     CONFIG — edit FACE_THRESHOLD if needed
+     0.45 = strict  |  0.55 = balanced  |  0.65 = lenient
+════════════════════════════════════ -->
 <script>
 const CONFIG = {
-  FACE_THRESHOLD: 0.48,
-  EVENT_NAME: "Dada Dadi's Golden Jubilee"
+  FACE_THRESHOLD: 0.48
 };
 </script>
 
 <div class="container">
+
+  <!-- ── HEADER ── -->
   <header>
-    <div class="years-badge">✦ 50 Years of Love ✦</div>
+    <div class="years-badge">✦ &nbsp;50 Years of Love&nbsp; ✦</div>
     <div class="ornament">
       <div class="ornament-line"></div>
       <div class="ornament-diamond"></div>
@@ -408,134 +529,206 @@ const CONFIG = {
     <p class="tagline">Golden Jubilee Celebration</p>
   </header>
 
+  <!-- ── SELFIE CARD ── -->
   <div class="card" id="selfie-section">
     <div class="card-title">
       <div class="step-num">1</div>
-      Take 3 quick selfies
+      Take three quick selfies
     </div>
-
     <p>
-      Capture three photos:
-      <br>• Looking straight ahead
-      <br>• Looking slightly left
-      <br>• Looking slightly right
-      <br><br>
-      This helps us map your facial features to instantly retrieve your portraits from the party archive.
+      We'll take three photos to get a clear read of your face — one looking straight ahead, one slightly left, and one slightly right. This helps us find every photo you're in across the entire collection.
     </p>
 
-    <div id="camera-placeholder" class="video-placeholder" onclick="startCamera()">
-      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+    <!-- Step dots -->
+    <div class="step-dots" id="step-dots">
+      <div class="step-dot active" id="dot-0"></div>
+      <div class="step-dot"        id="dot-1"></div>
+      <div class="step-dot"        id="dot-2"></div>
+    </div>
+
+    <!-- Camera placeholder -->
+    <div class="video-placeholder" id="camera-placeholder" onclick="startCamera()">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="1.5">
         <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
         <circle cx="12" cy="13" r="4"/>
       </svg>
       <span>Tap to open camera</span>
     </div>
 
-    <div id="camera-wrap" class="video-wrap" style="display:none;">
+    <!-- Live video -->
+    <div class="video-wrap" id="camera-wrap">
       <video id="video" autoplay playsinline muted></video>
-      <div id="flash-overlay" class="camera-flash"></div>
+      <div class="camera-flash" id="flash-overlay"></div>
     </div>
-    
-    <div id="selfie-instruction" style="display:none;text-align:center;margin:12px 0;color:var(--gold-light); font-size:14px; font-weight:500;">
+
+    <div class="selfie-instruction" id="selfie-instruction">
       Look straight at the camera
     </div>
 
-    <div id="status-models" class="status-box">
+    <!-- Status -->
+    <div class="status-box" id="status-models">
       <div class="spinner"></div>
-      <span id="model-status-text">Initializing matching system…</span>
+      <span id="model-status-text">Getting everything ready…</span>
     </div>
 
-    <button id="btn-capture" class="btn btn-gold" style="display:none;" onclick="captureAndSearch()">
-      ✦ Capture (1/3)
+    <button class="btn btn-gold"    id="btn-capture" style="display:none;" onclick="captureStep()">
+      ✦ &nbsp;Capture &nbsp;(1 / 3)
     </button>
-    <button id="btn-retake" class="btn btn-outline" style="display:none;" onclick="retakePhoto()">
-      Retake Selfie
+    <button class="btn btn-outline" id="btn-retake"  style="display:none;" onclick="retakePhoto()">
+      Retake Photo
     </button>
   </div>
 
+  <!-- ── RESULTS ── -->
   <div id="results-section">
+
     <div class="results-header">
       <div class="ornament">
         <div class="ornament-line"></div>
         <div class="ornament-diamond"></div>
         <div class="ornament-line"></div>
       </div>
-      <h2>Your <em style="font-style:italic;color:var(--gold-light)">Memories</em></h2>
-      <p>From Dada Dadi's Golden Jubilee</p>
-      <div id="results-count-badge" class="results-count"></div>
+      <h2>Your <em>Memories</em></h2>
+      <p class="sub">Dada &amp; Dadi's Golden Jubilee</p>
+      <div class="results-count" id="results-count-badge" style="display:none;"></div>
     </div>
 
-    <div id="progress-wrap" class="progress-bar-wrap">
-      <div id="progress-bar" class="progress-bar"></div>
-      <div id="progress-label" class="progress-label">Scanning archives…</div>
+    <div class="progress-wrap" id="progress-wrap">
+      <div class="progress-bar" id="progress-bar"></div>
     </div>
+    <div class="progress-label" id="progress-label" style="display:none;"></div>
 
-    <div id="status-scanning" class="status-box">
+    <div class="status-box" id="status-scanning">
       <div class="spinner"></div>
-      <span id="scan-status-text">Fetching your photo collection…</span>
+      <span id="scan-status-text">Searching through the collection…</span>
     </div>
 
-    <div id="photos-grid" class="photos-grid"></div>
+    <div class="photos-grid" id="photos-grid"></div>
 
-    <div id="no-results" class="no-results">
-      <h3>No matches found</h3>
-      <p>Try retaking your selfie in better light, facing the camera directly.</p>
+    <div class="no-results" id="no-results">
+      <h3>No photos found</h3>
+      <p>
+        We couldn't find a match. Try again in better light, face the camera directly, and remove sunglasses if you're wearing any.
+      </p>
     </div>
 
-    <div class="download-all-wrap" id="download-all-wrap" style="display:none;">
-      <p class="download-note">Tap any portrait to pull the full size asset or forward it on WhatsApp</p>
-    </div>
+    <p id="download-note" style="display:none; font-size:11px; color:var(--muted); text-align:center; margin-top:4px;">
+      Tap any photo to view full size, download, or share on WhatsApp.
+    </p>
 
-    <button class="btn btn-outline" onclick="resetSearch()" style="margin-top:16px;">
+    <button class="btn btn-outline" onclick="resetSearch()" style="margin-top:18px;">
       ← Search Again
     </button>
   </div>
 
   <footer>
-    <p>Made with ❤️ for Dada Dadi's 50 Years</p>
+    <p>Made with ❤️ &nbsp;for Dada &amp; Dadi's 50 Years</p>
   </footer>
 </div>
 
-<div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
-  <button class="lightbox-close" onclick="closeLightbox()">✕</button>
-  <img id="lightbox-img" src="" alt="">
-  <div class="lightbox-controls">
-    <a id="lightbox-dl" class="btn btn-outline" style="background: rgba(26,16,8,0.85);" href="#" target="_blank">⬇ Get High-Res Original</a>
-    <a id="lightbox-wa" class="btn btn-gold" href="#" target="_blank">💬 Share on WhatsApp</a>
+<!-- ── LIGHTBOX ── -->
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightbox-close">✕</button>
+  <div class="lightbox-img-wrap">
+    <img id="lightbox-img" src="" alt="Your memory from the Golden Jubilee">
+  </div>
+  <div class="lightbox-actions">
+    <a  id="lightbox-dl" class="btn btn-outline"
+        href="#" target="_blank" rel="noopener">
+      ⬇ &nbsp;Download
+    </a>
+    <button id="lightbox-copy" class="btn btn-copy" onclick="copyLink()">
+      🔗 &nbsp;Copy Link
+    </button>
+    <a  id="lightbox-wa" class="btn btn-gold"
+        href="#" target="_blank" rel="noopener">
+      💬 &nbsp;WhatsApp
+    </a>
   </div>
 </div>
 
+<!-- ═══════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════ -->
 <script>
-// ══════════════════════════════════════
-//  STATE & ASSETS
-// ══════════════════════════════════════
-let stream = null;
-let descriptorsData = [];
-let photoMap = {};
-let selfieDescriptors = [];
-let currentSelfieStep = 0;
-let capturedImageData = null;
-let modelsLoaded = false;
-let modelsLoading = false;
+/* ──────────────────────────────────────
+   STATE
+────────────────────────────────────── */
+let stream             = null;
+let selfieDescriptors  = [];
+let currentStep        = 0;          // 0, 1, 2
+let modelsLoaded       = false;
+let modelsLoading      = false;
+let descriptorsData    = [];
+let photoMap           = {};
+let currentLightboxUrl = '';
 
 const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
-const shutterSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3');
 
-// ══════════════════════════════════════
-//  LOAD INDEX PIPELINE
-// ══════════════════════════════════════
-async function loadData() {
-  descriptorsData = await fetch('./descriptors.json').then(r => r.json());
-  photoMap = await fetch('./photo-map.json').then(r => r.json());
-  console.log(`Loaded ${descriptorsData.length} descriptors`);
-}
-  
-// ══════════════════════════════════════
-//  CAMERA ACCESS (With Graceful Fallback)
-// ══════════════════════════════════════
+const STEP_INSTRUCTIONS = [
+  'Look straight at the camera',
+  'Now turn your head slightly to the left',
+  'Almost done — turn slightly to the right'
+];
+const STEP_LABELS = [
+  '✦ \u2002Capture\u2002 (1 / 3)',
+  '✦ \u2002Capture\u2002 (2 / 3)',
+  '✦ \u2002Find My Photos\u2002 (3 / 3)'
+];
+
+/* ──────────────────────────────────────
+   BOOT — load models & data immediately
+   on page load, independent of camera
+────────────────────────────────────── */
+(async function boot() {
+  try {
+    showStatus('status-models', 'Getting everything ready…', false);
+    document.getElementById('status-models').classList.add('show');
+
+    // Load data files
+    const [desc, map] = await Promise.all([
+      fetch('./descriptors.json').then(r => {
+        if (!r.ok) throw new Error('descriptors.json not found');
+        return r.json();
+      }),
+      fetch('./photo-map.json').then(r => {
+        if (!r.ok) throw new Error('photo-map.json not found');
+        return r.json();
+      })
+    ]);
+    descriptorsData = desc;
+    photoMap        = map;
+
+    // Load face models sequentially (prevents mobile OOM crashes)
+    await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+    await faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL);
+    await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+
+    modelsLoaded = true;
+    document.getElementById('status-models').classList.remove('show');
+
+    // Enable capture button if camera is already open
+    const btn = document.getElementById('btn-capture');
+    if (btn.style.display !== 'none') btn.disabled = false;
+
+  } catch (err) {
+    showStatus('status-models',
+      'Could not load the matching system. Please check your connection and refresh the page.',
+      true);
+    document.getElementById('status-models').classList.add('show');
+    console.error('Boot error:', err);
+  }
+})();
+
+/* ──────────────────────────────────────
+   CAMERA
+────────────────────────────────────── */
 async function startCamera() {
   document.getElementById('camera-placeholder').style.display = 'none';
-  document.getElementById('camera-wrap').style.display = 'block';
+  document.getElementById('camera-wrap').style.display        = 'block';
+  document.getElementById('selfie-instruction').style.display = 'block';
+  document.getElementById('selfie-instruction').textContent   = STEP_INSTRUCTIONS[0];
 
   try {
     stream = await navigator.mediaDevices.getUserMedia({
@@ -546,300 +739,303 @@ async function startCamera() {
     video.srcObject = stream;
     await video.play();
 
-    document.getElementById('btn-capture').style.display = 'block';
-    document.getElementById('btn-capture').disabled = !modelsLoaded;
-
-    if (!modelsLoaded && !modelsLoading) {
-      modelsLoading = true;
-      loadModels(); 
-    }
-    document.getElementById('selfie-instruction').style.display = 'block';
+    const btn = document.getElementById('btn-capture');
+    btn.textContent = STEP_LABELS[0];
+    btn.style.display = 'block';
+    btn.disabled = !modelsLoaded;
 
   } catch (err) {
-    // Graceful Failure UI
-    const statusBox = document.getElementById('status-models');
-    statusBox.classList.add('show');
-    statusBox.style.background = 'rgba(200,60,60,0.1)';
-    statusBox.style.borderColor = 'rgba(200,60,60,0.3)';
-    statusBox.innerHTML = `
-      <div style="text-align:center; padding: 10px; width: 100%;">
-        <div style="font-size:24px; margin-bottom:8px;">📷</div>
-        <strong style="color:#FF9999; font-family:'DM Sans', sans-serif;">Camera Access Needed</strong><br>
-        <div style="font-size:12px; color:var(--muted); margin-top:6px; line-height:1.4;">We need camera access to find your face.<br>Please tap 'Allow' or check your browser settings.</div>
-        <button class="btn btn-outline" style="padding:10px 16px; margin-top:16px; font-size:12px; color:#FF9999; border-color:#FF9999;" onclick="location.reload()">↻ Refresh & Try Again</button>
-      </div>
-    `;
-  }
-}
-  
-// ══════════════════════════════════════
-//  LOAD MODELS (THE SEQUENTIAL FIX)
-// ══════════════════════════════════════
-async function loadModels() {
-  const statusBox = document.getElementById('status-models');
-  statusBox.classList.add('show');
-
-  try {
-    // 1. Fetch JSON mapping first (very fast)
-    await loadData();
-
-    // 2. Load heavy models SEQUENTIALLY to prevent mobile browsers from crashing
-    await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-    await faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL);
-    await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
-
-    modelsLoaded = true;
-    modelsLoading = false;
-    
-    statusBox.classList.remove('show');
-    
-    const captureBtn = document.getElementById('btn-capture');
-    if (captureBtn) captureBtn.disabled = false;
-
-  } catch (err) { 
-    modelsLoading = false;
-    console.error("INITIALIZATION ERROR:", err);
-    showStatus('status-models', 'Connection failed. Please check internet connection and refresh.', true);
+    document.getElementById('camera-wrap').style.display = 'none';
+    document.getElementById('camera-placeholder').style.display = 'flex';
+    showStatus('status-models',
+      'Camera access was denied. Please allow camera access in your browser settings and tap again.',
+      true);
+    document.getElementById('status-models').classList.add('show');
   }
 }
 
-// ══════════════════════════════════════
-//  CAPTURE MECHANICS
-// ══════════════════════════════════════
-async function captureAndSearch() {
+/* ──────────────────────────────────────
+   CAPTURE ONE SELFIE STEP
+────────────────────────────────────── */
+async function captureStep() {
   if (!modelsLoaded) {
-    showStatus('status-models', 'Still initializing structures, please wait…', false);
+    showStatus('status-models', 'Still loading — please wait a moment.', false);
     document.getElementById('status-models').classList.add('show');
     return;
   }
 
   document.getElementById('status-models').classList.remove('show');
+  document.getElementById('btn-capture').disabled = true;
 
-  const video = document.getElementById('video');
+  const video  = document.getElementById('video');
   const canvas = document.createElement('canvas');
-  canvas.width = video.videoWidth;
+  canvas.width  = video.videoWidth;
   canvas.height = video.videoHeight;
   canvas.getContext('2d').drawImage(video, 0, 0);
-  capturedImageData = canvas.toDataURL('image/jpeg', 0.9);
+  const imageData = canvas.toDataURL('image/jpeg', 0.92);
 
-  // 1. Trigger Flash Overlay
-  const flash = document.getElementById('flash-overlay');
-  if (flash) {
-    flash.classList.remove('flash-anim');
-    void flash.offsetWidth; 
-    flash.classList.add('flash-anim');
-  }
-  
-  // 2. Play Shutter Sound
-  shutterSound.play().catch(() => console.log('Audio track interaction deferred'));
+  // Flash + haptic
+  triggerFlash();
+  if (navigator.vibrate) navigator.vibrate(35);
 
-  // 3. Trigger Haptic Feedback (Vibration for mobile)
-  if (navigator.vibrate) navigator.vibrate(40);
-
-  // 4. Render Frame State (Freeze the video on their face)
-  document.getElementById('camera-wrap').innerHTML = `
-    <img src="${capturedImageData}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
-  `;
-
-  // Compute Vector Descriptor
-  const img = await faceapi.fetchImage(capturedImageData);
+  // Detect face
+  const img       = await faceapi.fetchImage(imageData);
   const detection = await faceapi
     .detectSingleFace(img, new faceapi.TinyFaceDetectorOptions())
     .withFaceLandmarks(true)
     .withFaceDescriptor();
 
   if (!detection) {
-    showStatus('status-models', 'Face focus lost. Look directly into the frame with clean lighting.', true);
+    showStatus('status-models',
+      'No face detected. Make sure you\'re in good light and looking directly at the camera.',
+      true);
     document.getElementById('status-models').classList.add('show');
-    document.getElementById('btn-retake').style.display = 'block';
-    document.getElementById('btn-capture').style.display = 'none';
+    document.getElementById('btn-capture').disabled = false;
     return;
   }
 
   selfieDescriptors.push(detection.descriptor);
-  currentSelfieStep++;
+  markDotDone(currentStep);
+  currentStep++;
 
-  if (currentSelfieStep < 3) {
-    setTimeout(() => {
-      if (currentSelfieStep === 1) {
-        document.getElementById('selfie-instruction').innerText = 'Great! Now turn slightly LEFT';
-        document.getElementById('btn-capture').innerText = '✦ Capture (2/3)';
-      } else if (currentSelfieStep === 2) {
-        document.getElementById('selfie-instruction').innerText = 'Perfect! Now turn slightly RIGHT';
-        document.getElementById('btn-capture').innerText = '✦ Find My Photos (3/3)';
-      }
-      retakeForNextSelfie();
-    }, 800); 
+  if (currentStep < 3) {
+    // Move to next selfie
+    markDotActive(currentStep);
+    document.getElementById('selfie-instruction').textContent = STEP_INSTRUCTIONS[currentStep];
+    const btn = document.getElementById('btn-capture');
+    btn.textContent = STEP_LABELS[currentStep];
+    btn.disabled = false;
   } else {
-    if (stream) {
-      stream.getTracks().forEach(t => t.stop());
-      stream = null;
-    }
-
-    document.getElementById('selfie-section').style.display = 'none';
-    document.getElementById('results-section').style.display = 'block';
-    document.getElementById('status-scanning').classList.add('show');
-    document.getElementById('scan-status-text').textContent = 'Searching archives...';
-    
-    const progressWrap = document.getElementById('progress-wrap');
-    if (progressWrap) progressWrap.remove();
-
-    // Render smooth transition loop 
-    setTimeout(() => {
-      const matches = findMatches(selfieDescriptors);
-      document.getElementById('status-scanning').classList.remove('show');
-      showResults(matches);
-    }, 50);
+    // All 3 done — begin search
+    stopCamera();
+    beginSearch();
   }
 }
 
-// ══════════════════════════════════════
-//  MATCH RESOLUTION & DEDUPLICATION
-// ══════════════════════════════════════
-function findMatches(selfieDescriptors) {
-  const bestMatches = {}; 
+/* ──────────────────────────────────────
+   RETAKE (restart camera stream)
+────────────────────────────────────── */
+async function retakePhoto() {
+  document.getElementById('btn-retake').style.display  = 'none';
+  document.getElementById('status-models').classList.remove('show');
+
+  // Re-open camera properly
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 640 } },
+      audio: false
+    });
+    const wrap  = document.getElementById('camera-wrap');
+    wrap.innerHTML = `<video id="video" autoplay playsinline muted></video>
+                      <div class="camera-flash" id="flash-overlay"></div>`;
+    wrap.style.display = 'block';
+    const video = document.getElementById('video');
+    video.srcObject = stream;
+    await video.play();
+
+    document.getElementById('btn-capture').disabled  = !modelsLoaded;
+    document.getElementById('btn-capture').style.display = 'block';
+  } catch (err) {
+    showStatus('status-models',
+      'Could not reopen the camera. Please refresh the page and try again.', true);
+    document.getElementById('status-models').classList.add('show');
+  }
+}
+
+/* ──────────────────────────────────────
+   SEARCH
+────────────────────────────────────── */
+function beginSearch() {
+  document.getElementById('selfie-section').style.display  = 'none';
+  document.getElementById('results-section').style.display = 'block';
+  document.getElementById('status-scanning').classList.add('show');
+  document.getElementById('scan-status-text').textContent  = 'Searching through the collection…';
+
+  // Skeleton placeholders
+  const grid = document.getElementById('photos-grid');
+  grid.innerHTML = '';
+  for (let i = 0; i < 6; i++) {
+    const s = document.createElement('div');
+    s.className = 'skeleton-card';
+    grid.appendChild(s);
+  }
+
+  // Run match (tiny delay so DOM can paint skeletons)
+  setTimeout(() => {
+    const matches = findMatches(selfieDescriptors);
+    showResults(matches);
+  }, 80);
+}
+
+function findMatches(descriptors) {
+  const best = {};
 
   for (const item of descriptorsData) {
-    const dist = Math.min(...selfieDescriptors.map(desc => distance(desc, item.descriptor)));
-
+    const dist = Math.min(...descriptors.map(d => euclidean(d, item.descriptor)));
     if (dist < CONFIG.FACE_THRESHOLD) {
-      if (!bestMatches[item.photo] || bestMatches[item.photo].distance > dist) {
-        bestMatches[item.photo] = {
-          photo: item.photo,
-          driveId: photoMap[item.photo],
-          distance: dist
-        };
+      if (!best[item.photo] || best[item.photo].dist > dist) {
+        best[item.photo] = { photo: item.photo, driveId: photoMap[item.photo], dist };
       }
     }
   }
 
-  const matches = Object.values(bestMatches);
-  matches.sort((a, b) => a.distance - b.distance);
-
-  return matches;
+  return Object.values(best).sort((a, b) => a.dist - b.dist);
 }
 
-function distance(a, b) {
-  let sum = 0;
-  for (let i = 0; i < a.length; i++) {
-    const d = a[i] - b[i];
-    sum += d * d;
-  }
-  return Math.sqrt(sum);
+function euclidean(a, b) {
+  let s = 0;
+  for (let i = 0; i < a.length; i++) { const d = a[i] - b[i]; s += d * d; }
+  return Math.sqrt(s);
 }
 
-// ══════════════════════════════════════
-//  GALLERY RENDERING & SKELETON SHIMMER
-// ══════════════════════════════════════
+/* ──────────────────────────────────────
+   RENDER RESULTS
+────────────────────────────────────── */
 function showResults(matches) {
-  document.getElementById('selfie-section').style.display = 'none';
-  document.getElementById('results-section').style.display = 'block';
+  document.getElementById('status-scanning').classList.remove('show');
 
   const grid = document.getElementById('photos-grid');
   grid.innerHTML = '';
-  document.getElementById('no-results').classList.remove('show');
 
   if (matches.length === 0) {
     document.getElementById('no-results').classList.add('show');
     return;
   }
 
-  // Trigger Celebration Confetti Drops
+  // Confetti 🎉
   confetti({
-    particleCount: 140,
-    spread: 85,
-    origin: { y: 0.65 },
-    colors: ['#C9A84C', '#E8CC7A', '#FFFFFF', '#FAF5E9']
+    particleCount: 130,
+    spread: 80,
+    origin: { y: 0.6 },
+    colors: ['#C9A84C', '#E8CC7A', '#FFFDF6', '#FAF5E9']
   });
 
-  // Inject Shimmering Skeleton Loader Placeholders
-  for (let i = 0; i < Math.min(4, matches.length); i++) {
-    const placeholder = document.createElement('div');
-    placeholder.className = 'skeleton-card';
-    grid.appendChild(placeholder);
-  }
+  const badge = document.getElementById('results-count-badge');
+  badge.textContent    = `${matches.length} photo${matches.length === 1 ? '' : 's'} found`;
+  badge.style.display  = 'inline-block';
+  document.getElementById('download-note').style.display = 'block';
 
-  // Populate actual matched data post micro-shimmer paint cycle
-  setTimeout(() => {
-    grid.innerHTML = ''; 
-    document.getElementById('results-count-badge').textContent = `${matches.length} photos found`;
-    document.getElementById('download-all-wrap').style.display = 'block';
+  matches.forEach((match, i) => {
+    const thumbUrl    = `https://drive.google.com/thumbnail?id=${match.driveId}&sz=w800`;
+    const downloadUrl = `https://drive.google.com/uc?export=download&id=${match.driveId}`;
+    const viewUrl     = `https://drive.google.com/file/d/${match.driveId}/view`;
 
-    for (const match of matches) {
-      const thumbUrl = `https://drive.google.com/thumbnail?id=${match.driveId}&sz=w800`;
-      const viewUrl = `https://drive.google.com/file/d/${match.driveId}/view`;
-      const confidence = Math.max(0, Math.min(100, Math.round((1 - match.distance) * 100)));
-      
-      const card = document.createElement('div');
-      card.className = 'photo-item';
-      card.innerHTML = `
-        <img src="${thumbUrl}" alt="Memory" loading="lazy">
-        <div class="confidence">${confidence}%</div>
-      `;
-
-      card.onclick = () => { openLightbox(thumbUrl, viewUrl); };
-      grid.appendChild(card);
-    }
-  }, 400);
+    const card = document.createElement('div');
+    card.className = 'photo-item';
+    card.style.animationDelay = (i * 0.06) + 's';
+    card.style.animation      = 'photoReveal 0.45s ease both';
+    card.innerHTML = `<img src="${thumbUrl}" alt="Your photo" loading="lazy">`;
+    card.onclick = () => openLightbox(thumbUrl, downloadUrl, viewUrl);
+    grid.appendChild(card);
+  });
 }
-  
-// ══════════════════════════════════════
-//  LIGHTBOX VIEW INTERACTS
-// ══════════════════════════════════════
-function openLightbox(imgUrl, viewUrl) {
-  document.getElementById('lightbox-img').src = imgUrl;
-  document.getElementById('lightbox-dl').href = viewUrl;
-  
-  const shareText = encodeURIComponent(`Look at this beautiful memory from Dada & Dadi's Golden Jubilee! 💛 ${viewUrl}`);
-  document.getElementById('lightbox-wa').href = `https://api.whatsapp.com/send?text=${shareText}`;
-  
+
+/* ──────────────────────────────────────
+   LIGHTBOX
+────────────────────────────────────── */
+function openLightbox(thumbUrl, downloadUrl, viewUrl) {
+  currentLightboxUrl = viewUrl;
+  document.getElementById('lightbox-img').src  = thumbUrl;
+  document.getElementById('lightbox-dl').href  = downloadUrl;
+
+  const shareText = encodeURIComponent(
+    `Here's a memory from Dada & Dadi's Golden Jubilee! 💛 ${viewUrl}`
+  );
+  document.getElementById('lightbox-wa').href =
+    `https://api.whatsapp.com/send?text=${shareText}`;
+
   document.getElementById('lightbox').classList.add('open');
 }
-  
-function closeLightbox(e) {
-  if (!e || e.target === document.getElementById('lightbox') || e.target.classList.contains('lightbox-close')) {
-    document.getElementById('lightbox').classList.remove('open');
+
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+}
+
+async function copyLink() {
+  try {
+    await navigator.clipboard.writeText(currentLightboxUrl);
+    const btn = document.getElementById('lightbox-copy');
+    btn.textContent = '✓ \u2002Copied!';
+    setTimeout(() => { btn.innerHTML = '🔗 \u2002Copy Link'; }, 2200);
+  } catch {
+    alert('Copy failed — long-press the link to copy manually.');
   }
 }
 
-// ══════════════════════════════════════
-//  STATE CONTROLS & RESETS
-// ══════════════════════════════════════
+// Close lightbox on backdrop click
+document.getElementById('lightbox').addEventListener('click', function(e) {
+  if (e.target === this) closeLightbox();
+});
+document.getElementById('lightbox-close').addEventListener('click', closeLightbox);
+
+/* ──────────────────────────────────────
+   HELPERS
+────────────────────────────────────── */
+function triggerFlash() {
+  const el = document.getElementById('flash-overlay');
+  if (!el) return;
+  el.classList.remove('flash');
+  void el.offsetWidth; // reflow to restart animation
+  el.classList.add('flash');
+}
+
+function stopCamera() {
+  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+}
+
+function markDotDone(i) {
+  const dot = document.getElementById(`dot-${i}`);
+  if (dot) { dot.classList.remove('active'); dot.classList.add('done'); }
+}
+function markDotActive(i) {
+  const dot = document.getElementById(`dot-${i}`);
+  if (dot) dot.classList.add('active');
+}
+
 function showStatus(id, msg, isError) {
   const el = document.getElementById(id);
+  if (!el) return;
   el.innerHTML = isError
-    ? `<span>⚠️ ${msg}</span>`
+    ? `<span>⚠️ &nbsp;${msg}</span>`
     : `<div class="spinner"></div><span>${msg}</span>`;
   el.classList.toggle('error', isError);
 }
 
-function retakePhoto() {
-  document.getElementById('btn-retake').style.display = 'none';
-  document.getElementById('btn-capture').style.display = 'block';
-  document.getElementById('status-models').classList.remove('show');
-  
-  document.getElementById('camera-wrap').innerHTML =
-    `<video id="video" autoplay playsinline muted></video>
-     <div id="flash-overlay" class="camera-flash"></div>`;
-     
-  const video = document.getElementById('video');
-  video.srcObject = stream;
-  video.play();
-}
-  
-async function retakeForNextSelfie() {
-  document.getElementById('camera-wrap').innerHTML =
-    `<video id="video" autoplay playsinline muted></video>
-     <div id="flash-overlay" class="camera-flash"></div>`;
-  const video = document.getElementById('video');
-  video.srcObject = stream;
-  await video.play();
-  document.getElementById('btn-capture').style.display = 'block';
-  document.getElementById('btn-retake').style.display = 'none';
-}
-
 function resetSearch() {
-  location.reload(); 
+  stopCamera();
+  selfieDescriptors  = [];
+  currentStep        = 0;
+
+  // Reset dots
+  for (let i = 0; i < 3; i++) {
+    const d = document.getElementById(`dot-${i}`);
+    d.className = 'step-dot' + (i === 0 ? ' active' : '');
+  }
+
+  // Reset UI
+  document.getElementById('results-section').style.display  = 'none';
+  document.getElementById('selfie-section').style.display   = 'block';
+  document.getElementById('photos-grid').innerHTML          = '';
+  document.getElementById('no-results').classList.remove('show');
+  document.getElementById('download-note').style.display    = 'none';
+  document.getElementById('results-count-badge').style.display = 'none';
+  document.getElementById('progress-wrap').classList.remove('show');
+
+  // Reset camera area
+  document.getElementById('camera-wrap').style.display        = 'none';
+  document.getElementById('camera-wrap').innerHTML =
+    `<video id="video" autoplay playsinline muted></video>
+     <div class="camera-flash" id="flash-overlay"></div>`;
+  document.getElementById('camera-placeholder').style.display = 'flex';
+  document.getElementById('selfie-instruction').style.display = 'none';
+
+  // Reset buttons
+  const captureBtn = document.getElementById('btn-capture');
+  captureBtn.style.display = 'none';
+  captureBtn.disabled      = !modelsLoaded;
+  captureBtn.textContent   = STEP_LABELS[0];
+  document.getElementById('btn-retake').style.display = 'none';
+  document.getElementById('status-models').classList.remove('show');
 }
 </script>
 </body>
