@@ -517,58 +517,14 @@ const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
 const shutterSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3');
 
 // ══════════════════════════════════════
-//  AUTOMATIC BACKGROUND PRELOAD
-// ══════════════════════════════════════
-window.addEventListener('DOMContentLoaded', () => {
-  if (!modelsLoaded && !modelsLoading) {
-    modelsLoading = true;
-    loadModels();
-  }
-});
-
-// ══════════════════════════════════════
 //  LOAD INDEX PIPELINE
 // ══════════════════════════════════════
 async function loadData() {
   descriptorsData = await fetch('./descriptors.json').then(r => r.json());
   photoMap = await fetch('./photo-map.json').then(r => r.json());
-
   console.log(`Loaded ${descriptorsData.length} descriptors`);
-  console.log(`Loaded ${Object.keys(photoMap).length} photo mappings`);
 }
   
-// ══════════════════════════════════════
-//  LOAD MODELS
-// ══════════════════════════════════════
-async function loadModels() {
-  try {
-    await Promise.all([
-      faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
-      faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL),
-      faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
-    ]);
-
-    await loadData();
-
-    modelsLoaded = true;
-    modelsLoading = false;
-    
-    // Clear status UI if camera is already open
-    const statusBox = document.getElementById('status-models');
-    if (statusBox) statusBox.classList.remove('show');
-    
-    // Enable the capture button instantly if user is waiting
-    const captureBtn = document.getElementById('btn-capture');
-    if (captureBtn && stream) captureBtn.disabled = false;
-
-  } catch (err) { 
-    modelsLoading = false;
-    console.error("CRITICAL INITIALIZATION ERROR:", err);
-    showStatus('status-models', 'Initialization failed. Please check internet connection or refresh.', true);
-    document.getElementById('status-models').classList.add('show');
-  }
-}
-
 // ══════════════════════════════════════
 //  CAMERA ACCESS
 // ══════════════════════════════════════
@@ -587,19 +543,50 @@ async function startCamera() {
 
     document.getElementById('btn-capture').style.display = 'block';
     
-    if (modelsLoaded) {
-       document.getElementById('btn-capture').disabled = false;
-    } else {
-       // Display spinner ONLY if background loading isn't finished yet
-       document.getElementById('btn-capture').disabled = true;
-       document.getElementById('status-models').classList.add('show');
-    }
+    // Disable button if models aren't ready yet
+    document.getElementById('btn-capture').disabled = !modelsLoaded;
 
+    // Load ONLY when user taps camera to prevent mobile traffic jams
+    if (!modelsLoaded && !modelsLoading) {
+      modelsLoading = true;
+      loadModels(); 
+    }
   } catch (err) {
     showStatus('status-models', 'Camera access denied. Please allow permissions and reload.', true);
     document.getElementById('status-models').classList.add('show');
   }
   document.getElementById('selfie-instruction').style.display = 'block';
+}
+
+// ══════════════════════════════════════
+//  LOAD MODELS (THE SEQUENTIAL FIX)
+// ══════════════════════════════════════
+async function loadModels() {
+  const statusBox = document.getElementById('status-models');
+  statusBox.classList.add('show');
+
+  try {
+    // 1. Fetch JSON mapping first (very fast)
+    await loadData();
+
+    // 2. Load heavy models SEQUENTIALLY to prevent mobile browsers from crashing
+    await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+    await faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL);
+    await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+
+    modelsLoaded = true;
+    modelsLoading = false;
+    
+    statusBox.classList.remove('show');
+    
+    const captureBtn = document.getElementById('btn-capture');
+    if (captureBtn) captureBtn.disabled = false;
+
+  } catch (err) { 
+    modelsLoading = false;
+    console.error("INITIALIZATION ERROR:", err);
+    showStatus('status-models', 'Connection failed. Please check internet connection and refresh.', true);
+  }
 }
 
 // ══════════════════════════════════════
