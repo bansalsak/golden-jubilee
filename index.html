@@ -517,6 +517,16 @@ const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
 const shutterSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3');
 
 // ══════════════════════════════════════
+//  AUTOMATIC BACKGROUND PRELOAD
+// ══════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  if (!modelsLoaded && !modelsLoading) {
+    modelsLoading = true;
+    loadModels();
+  }
+});
+
+// ══════════════════════════════════════
 //  LOAD INDEX PIPELINE
 // ══════════════════════════════════════
 async function loadData() {
@@ -527,6 +537,38 @@ async function loadData() {
   console.log(`Loaded ${Object.keys(photoMap).length} photo mappings`);
 }
   
+// ══════════════════════════════════════
+//  LOAD MODELS
+// ══════════════════════════════════════
+async function loadModels() {
+  try {
+    await Promise.all([
+      faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+      faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL),
+      faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
+    ]);
+
+    await loadData();
+
+    modelsLoaded = true;
+    modelsLoading = false;
+    
+    // Clear status UI if camera is already open
+    const statusBox = document.getElementById('status-models');
+    if (statusBox) statusBox.classList.remove('show');
+    
+    // Enable the capture button instantly if user is waiting
+    const captureBtn = document.getElementById('btn-capture');
+    if (captureBtn && stream) captureBtn.disabled = false;
+
+  } catch (err) { 
+    modelsLoading = false;
+    console.error("CRITICAL INITIALIZATION ERROR:", err);
+    showStatus('status-models', 'Initialization failed. Please check internet connection or refresh.', true);
+    document.getElementById('status-models').classList.add('show');
+  }
+}
+
 // ══════════════════════════════════════
 //  CAMERA ACCESS
 // ══════════════════════════════════════
@@ -544,45 +586,20 @@ async function startCamera() {
     await video.play();
 
     document.getElementById('btn-capture').style.display = 'block';
-    document.getElementById('btn-capture').disabled = !modelsLoaded;
-
-    if (!modelsLoaded && !modelsLoading) {
-      modelsLoading = true;
-      loadModels(); 
+    
+    if (modelsLoaded) {
+       document.getElementById('btn-capture').disabled = false;
+    } else {
+       // Display spinner ONLY if background loading isn't finished yet
+       document.getElementById('btn-capture').disabled = true;
+       document.getElementById('status-models').classList.add('show');
     }
+
   } catch (err) {
-    showStatus('status-models', 'Could not access camera. Please allow permissions and reload.', true);
+    showStatus('status-models', 'Camera access denied. Please allow permissions and reload.', true);
     document.getElementById('status-models').classList.add('show');
   }
   document.getElementById('selfie-instruction').style.display = 'block';
-}
-
-// ══════════════════════════════════════
-//  LOAD MODELS
-// ══════════════════════════════════════
-async function loadModels() {
-  const statusBox = document.getElementById('status-models');
-  statusBox.classList.add('show');
-
-  try {
-    await Promise.all([
-      faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
-      faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL),
-      faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
-    ]);
-
-    await loadData();
-
-    modelsLoaded = true;
-    modelsLoading = false;
-    document.getElementById('btn-capture').disabled = false;
-    statusBox.classList.remove('show');
-
-  } catch (err) { 
-    modelsLoading = false;
-    showStatus('status-models', 'Connection failed. Please check your internet connection.', true);
-    statusBox.classList.add('show');
-  }
 }
 
 // ══════════════════════════════════════
@@ -659,7 +676,9 @@ async function captureAndSearch() {
     document.getElementById('results-section').style.display = 'block';
     document.getElementById('status-scanning').classList.add('show');
     document.getElementById('scan-status-text').textContent = 'Searching archives...';
-    document.getElementById('progress-wrap').remove();
+    
+    const progressWrap = document.getElementById('progress-wrap');
+    if (progressWrap) progressWrap.remove();
 
     // Render smooth transition loop 
     setTimeout(() => {
@@ -816,7 +835,7 @@ async function retakeForNextSelfie() {
 }
 
 function resetSearch() {
-  location.reload(); // Hard refresh safely flushes WebGL buffers and matching objects completely
+  location.reload(); 
 }
 </script>
 </body>
