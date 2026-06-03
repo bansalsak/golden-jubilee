@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<meta property="og:title" content="Dada & Dadi's Golden Jubilee">
+<meta property="og:description" content="Take a quick selfie to instantly find your memories from the 50th Anniversary celebration! 💛">
+<meta property="og:image" content="https://bansalsak.github.io/golden-jubilee/cover-image.jpg">
+<meta property="og:url" content="https://bansalsak.github.io/golden-jubilee/">
+<meta property="og:type" content="website">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="theme-color" content="#1A1008">
@@ -526,7 +531,7 @@ async function loadData() {
 }
   
 // ══════════════════════════════════════
-//  CAMERA ACCESS
+//  CAMERA ACCESS (With Graceful Fallback)
 // ══════════════════════════════════════
 async function startCamera() {
   document.getElementById('camera-placeholder').style.display = 'none';
@@ -542,22 +547,31 @@ async function startCamera() {
     await video.play();
 
     document.getElementById('btn-capture').style.display = 'block';
-    
-    // Disable button if models aren't ready yet
     document.getElementById('btn-capture').disabled = !modelsLoaded;
 
-    // Load ONLY when user taps camera to prevent mobile traffic jams
     if (!modelsLoaded && !modelsLoading) {
       modelsLoading = true;
       loadModels(); 
     }
-  } catch (err) {
-    showStatus('status-models', 'Camera access denied. Please allow permissions and reload.', true);
-    document.getElementById('status-models').classList.add('show');
-  }
-  document.getElementById('selfie-instruction').style.display = 'block';
-}
+    document.getElementById('selfie-instruction').style.display = 'block';
 
+  } catch (err) {
+    // Graceful Failure UI
+    const statusBox = document.getElementById('status-models');
+    statusBox.classList.add('show');
+    statusBox.style.background = 'rgba(200,60,60,0.1)';
+    statusBox.style.borderColor = 'rgba(200,60,60,0.3)';
+    statusBox.innerHTML = `
+      <div style="text-align:center; padding: 10px; width: 100%;">
+        <div style="font-size:24px; margin-bottom:8px;">📷</div>
+        <strong style="color:#FF9999; font-family:'DM Sans', sans-serif;">Camera Access Needed</strong><br>
+        <div style="font-size:12px; color:var(--muted); margin-top:6px; line-height:1.4;">We need camera access to find your face.<br>Please tap 'Allow' or check your browser settings.</div>
+        <button class="btn btn-outline" style="padding:10px 16px; margin-top:16px; font-size:12px; color:#FF9999; border-color:#FF9999;" onclick="location.reload()">↻ Refresh & Try Again</button>
+      </div>
+    `;
+  }
+}
+  
 // ══════════════════════════════════════
 //  LOAD MODELS (THE SEQUENTIAL FIX)
 // ══════════════════════════════════════
@@ -623,6 +637,16 @@ async function captureAndSearch() {
   document.getElementById('camera-wrap').innerHTML = `
     <img src="${capturedImageData}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
   `;
+
+  // Trigger Flash Overlay
+  const flash = document.getElementById('flash-overlay');
+  // ... (existing flash code) ...
+  
+  // Play Shutter Sound
+  shutterSound.play().catch(() => console.log('Audio track interaction deferred'));
+
+  // NEW: Trigger Haptic Feedback (Vibration)
+  if (navigator.vibrate) navigator.vibrate(40);
 
   // Compute Vector Descriptor
   const img = await faceapi.fetchImage(capturedImageData);
