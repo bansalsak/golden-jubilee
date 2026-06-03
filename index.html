@@ -3,10 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#1A1008">
 <title>Dada Dadi's Golden Jubilee — Find Your Memories</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 <style>
   :root {
     --gold: #C9A84C;
@@ -129,7 +131,7 @@
 
   .card p { font-size: 13px; color: var(--muted); line-height: 1.6; }
 
-  /* ── Selfie area ── */
+  /* ── Selfie Area ── */
   #selfie-section { animation-delay: 0.1s; }
 
   .video-wrap {
@@ -214,7 +216,7 @@
   }
   .btn-outline:hover { background: rgba(201,168,76,0.08); border-color: var(--gold); }
 
-  /* ── Status / Progress ── */
+  /* ── Status Boxes ── */
   .status-box {
     background: rgba(201,168,76,0.08);
     border: 1px solid rgba(201,168,76,0.2);
@@ -252,7 +254,7 @@
   }
   .progress-label { font-size: 11px; color: var(--muted); text-align: center; margin-top: 4px; }
 
-  /* ── Results ── */
+  /* ── Results Gallery ── */
   #results-section { display: none; animation: fadeUp 0.5s ease both; }
 
   .results-header {
@@ -277,73 +279,77 @@
   .photos-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    gap: 12px;
     margin-bottom: 20px;
   }
 
   .photo-item {
     position: relative;
-    border-radius: 10px;
+    border-radius: 12px;
     overflow: hidden;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(201,168,76,0.15);
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(201,168,76,0.12);
     cursor: pointer;
-    transition: transform 0.2s, border-color 0.2s;
+    transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.25s;
     animation: photoReveal 0.4s ease both;
   }
-  .photo-item:hover { transform: scale(1.02); border-color: rgba(201,168,76,0.4); }
+  .photo-item:hover { transform: scale(1.03); border-color: rgba(201,168,76,0.35); }
 
   .photo-item img {
     width: 100%; aspect-ratio: 1;
     object-fit: cover; display: block;
   }
 
-  .photo-item .dl-btn {
-    position: absolute; bottom: 6px; right: 6px;
-    background: rgba(26,16,8,0.85);
-    border: 1px solid rgba(201,168,76,0.5);
-    border-radius: 6px;
-    padding: 5px 8px;
-    font-size: 11px; color: var(--gold);
-    cursor: pointer; text-decoration: none;
-    backdrop-filter: blur(4px);
-    transition: background 0.2s;
-    font-family: 'DM Sans', sans-serif;
-  }
-  .photo-item .dl-btn:hover { background: rgba(201,168,76,0.2); }
-
   .photo-item .confidence {
-    position: absolute; top: 6px; left: 6px;
-    background: rgba(26,16,8,0.8);
+    position: absolute; top: 8px; left: 8px;
+    background: rgba(26,16,8,0.75);
     border-radius: 4px; padding: 2px 6px;
     font-size: 10px; color: var(--gold-light);
     backdrop-filter: blur(4px);
+    border: 1px solid rgba(201,168,76,0.15);
   }
 
-  /* ── Lightbox ── */
+  /* ── Skeleton Loading Shimmer ── */
+  .skeleton-card {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 12px;
+    background: linear-gradient(90deg, rgba(255,253,246,0.03) 25%, rgba(201,168,76,0.08) 50%, rgba(255,253,246,0.03) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite linear;
+    border: 1px solid rgba(201,168,76,0.05);
+  }
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* ── Lightbox View ── */
   .lightbox {
     display: none; position: fixed; inset: 0;
-    background: rgba(26,16,8,0.96);
+    background: rgba(15, 9, 4, 0.97);
     z-index: 100;
     align-items: center; justify-content: center;
     padding: 20px;
+    backdrop-filter: blur(8px);
   }
   .lightbox.open { display: flex; }
-  .lightbox img { max-width: 100%; max-height: 85vh; border-radius: 8px; object-fit: contain; }
+  .lightbox img { max-width: 100%; max-height: 75vh; border-radius: 8px; object-fit: contain; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
   .lightbox-close {
     position: absolute; top: 16px; right: 16px;
-    background: rgba(255,255,255,0.1); border: none;
-    color: white; font-size: 22px; width: 40px; height: 40px;
+    background: rgba(255,255,255,0.08); border: none;
+    color: white; font-size: 20px; width: 44px; height: 44px;
     border-radius: 50%; cursor: pointer; display: flex;
     align-items: center; justify-content: center;
+    transition: background 0.2s;
   }
-  .lightbox-dl {
-    position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-    background: linear-gradient(135deg, var(--gold), #A8792A);
-    color: var(--deep); padding: 12px 28px; border-radius: 8px;
-    text-decoration: none; font-weight: 500; font-size: 14px;
-    font-family: 'DM Sans', sans-serif;
+  .lightbox-close:hover { background: rgba(255,255,255,0.15); }
+  
+  .lightbox-controls {
+    position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); 
+    display: flex; gap: 12px; width: 90%; max-width: 400px;
   }
+  .lightbox-controls .btn { padding: 14px 16px; text-align: center; text-decoration: none; margin: 0; flex: 1; }
 
   /* ── Download all ── */
   .download-all-wrap { text-align: center; margin-top: 8px; }
@@ -372,9 +378,7 @@
   @keyframes fadeDown { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:translateY(0); } }
   @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
   @keyframes spin { to { transform: rotate(360deg); } }
-  @keyframes photoReveal { from { opacity:0; transform:scale(0.92); } to { opacity:1; transform:scale(1); } }
-
-  #selfie-section { animation-delay: 0.15s; }
+  @keyframes photoReveal { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
 </style>
 </head>
 <body>
@@ -411,7 +415,7 @@ const CONFIG = {
       <br>• Looking slightly left
       <br>• Looking slightly right
       <br><br>
-      This helps us find your photos more accurately.
+      This helps us map your facial features to instantly retrieve your portraits from the party archive.
     </p>
 
     <div id="camera-placeholder" class="video-placeholder" onclick="startCamera()">
@@ -427,13 +431,13 @@ const CONFIG = {
       <div id="flash-overlay" class="camera-flash"></div>
     </div>
     
-    <div id="selfie-instruction" style="display:none;text-align:center;margin:12px 0;color:var(--gold-light);">
+    <div id="selfie-instruction" style="display:none;text-align:center;margin:12px 0;color:var(--gold-light); font-size:14px; font-weight:500;">
       Look straight at the camera
     </div>
 
     <div id="status-models" class="status-box">
       <div class="spinner"></div>
-      <span id="model-status-text">Loading face recognition models…</span>
+      <span id="model-status-text">Initializing matching system…</span>
     </div>
 
     <button id="btn-capture" class="btn btn-gold" style="display:none;" onclick="captureAndSearch()">
@@ -458,7 +462,7 @@ const CONFIG = {
 
     <div id="progress-wrap" class="progress-bar-wrap">
       <div id="progress-bar" class="progress-bar"></div>
-      <div id="progress-label" class="progress-label">Scanning photos…</div>
+      <div id="progress-label" class="progress-label">Scanning archives…</div>
     </div>
 
     <div id="status-scanning" class="status-box">
@@ -474,7 +478,7 @@ const CONFIG = {
     </div>
 
     <div class="download-all-wrap" id="download-all-wrap" style="display:none;">
-      <p class="download-note">Tap any photo to view full size & download from Google Drive</p>
+      <p class="download-note">Tap any portrait to pull the full size asset or forward it on WhatsApp</p>
     </div>
 
     <button class="btn btn-outline" onclick="resetSearch()" style="margin-top:16px;">
@@ -490,12 +494,15 @@ const CONFIG = {
 <div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
   <button class="lightbox-close" onclick="closeLightbox()">✕</button>
   <img id="lightbox-img" src="" alt="">
-  <a id="lightbox-dl" class="lightbox-dl" href="#" target="_blank">⬇ Download Original</a>
+  <div class="lightbox-controls">
+    <a id="lightbox-dl" class="btn btn-outline" style="background: rgba(26,16,8,0.85);" href="#" target="_blank">⬇ Get High-Res Original</a>
+    <a id="lightbox-wa" class="btn btn-gold" href="#" target="_blank">💬 Share on WhatsApp</a>
+  </div>
 </div>
 
 <script>
 // ══════════════════════════════════════
-//  STATE
+//  STATE & ASSETS
 // ══════════════════════════════════════
 let stream = null;
 let descriptorsData = [];
@@ -507,9 +514,10 @@ let modelsLoaded = false;
 let modelsLoading = false;
 
 const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
+const shutterSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3');
 
 // ══════════════════════════════════════
-//  LOAD DESCRIPTORS + PHOTO MAP
+//  LOAD INDEX PIPELINE
 // ══════════════════════════════════════
 async function loadData() {
   descriptorsData = await fetch('./descriptors.json').then(r => r.json());
@@ -520,7 +528,7 @@ async function loadData() {
 }
   
 // ══════════════════════════════════════
-//  CAMERA
+//  CAMERA ACCESS
 // ══════════════════════════════════════
 async function startCamera() {
   document.getElementById('camera-placeholder').style.display = 'none';
@@ -535,26 +543,22 @@ async function startCamera() {
     video.srcObject = stream;
     await video.play();
 
-    // Setup UI
     document.getElementById('btn-capture').style.display = 'block';
-    
-    // Only disable if models haven't finished loading yet
     document.getElementById('btn-capture').disabled = !modelsLoaded;
 
-    // Load models in background
     if (!modelsLoaded && !modelsLoading) {
       modelsLoading = true;
       loadModels(); 
     }
   } catch (err) {
-    showStatus('status-models', 'Could not access camera. Please allow camera permission and refresh.', true);
+    showStatus('status-models', 'Could not access camera. Please allow permissions and reload.', true);
     document.getElementById('status-models').classList.add('show');
   }
   document.getElementById('selfie-instruction').style.display = 'block';
 }
 
 // ══════════════════════════════════════
-//  FACE-API MODELS
+//  LOAD MODELS
 // ══════════════════════════════════════
 async function loadModels() {
   const statusBox = document.getElementById('status-models');
@@ -567,7 +571,6 @@ async function loadModels() {
       faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
     ]);
 
-    // Load your pre-generated data
     await loadData();
 
     modelsLoaded = true;
@@ -577,17 +580,17 @@ async function loadModels() {
 
   } catch (err) { 
     modelsLoading = false;
-    showStatus('status-models', 'Failed to load face models. Check your internet connection.', true);
+    showStatus('status-models', 'Connection failed. Please check your internet connection.', true);
     statusBox.classList.add('show');
   }
 }
 
 // ══════════════════════════════════════
-//  CAPTURE SELFIE & SEARCH
+//  CAPTURE MECHANICS
 // ══════════════════════════════════════
 async function captureAndSearch() {
   if (!modelsLoaded) {
-    showStatus('status-models', 'Still loading models, please wait…', false);
+    showStatus('status-models', 'Still initializing structures, please wait…', false);
     document.getElementById('status-models').classList.add('show');
     return;
   }
@@ -601,20 +604,23 @@ async function captureAndSearch() {
   canvas.getContext('2d').drawImage(video, 0, 0);
   capturedImageData = canvas.toDataURL('image/jpeg', 0.9);
 
-  // Trigger Flash Effect
+  // Trigger Flash Overlay
   const flash = document.getElementById('flash-overlay');
   if (flash) {
     flash.classList.remove('flash-anim');
-    void flash.offsetWidth; // Restart animation
+    void flash.offsetWidth; 
     flash.classList.add('flash-anim');
   }
+  
+  // Play Shutter Sound
+  shutterSound.play().catch(() => console.log('Audio track interaction deferred'));
 
-  // Briefly show the captured image
+  // Render Frame State
   document.getElementById('camera-wrap').innerHTML = `
     <img src="${capturedImageData}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
   `;
 
-  // Detect face
+  // Compute Vector Descriptor
   const img = await faceapi.fetchImage(capturedImageData);
   const detection = await faceapi
     .detectSingleFace(img, new faceapi.TinyFaceDetectorOptions())
@@ -622,19 +628,17 @@ async function captureAndSearch() {
     .withFaceDescriptor();
 
   if (!detection) {
-    showStatus('status-models', 'No face detected. Please face the camera directly in good light.', true);
+    showStatus('status-models', 'Face focus lost. Look directly into the frame with clean lighting.', true);
     document.getElementById('status-models').classList.add('show');
     document.getElementById('btn-retake').style.display = 'block';
     document.getElementById('btn-capture').style.display = 'none';
     return;
   }
 
-  // Success! Save the face numbers
   selfieDescriptors.push(detection.descriptor);
   currentSelfieStep++;
 
   if (currentSelfieStep < 3) {
-    // Keep showing their captured photo for 800ms before switching back
     setTimeout(() => {
       if (currentSelfieStep === 1) {
         document.getElementById('selfie-instruction').innerText = 'Great! Now turn slightly LEFT';
@@ -646,7 +650,6 @@ async function captureAndSearch() {
       retakeForNextSelfie();
     }, 800); 
   } else {
-    // Step 3 is done. Stop camera.
     if (stream) {
       stream.getTracks().forEach(t => t.stop());
       stream = null;
@@ -655,10 +658,10 @@ async function captureAndSearch() {
     document.getElementById('selfie-section').style.display = 'none';
     document.getElementById('results-section').style.display = 'block';
     document.getElementById('status-scanning').classList.add('show');
-    document.getElementById('scan-status-text').textContent = 'Searching the archives...';
-    document.getElementById('progress-wrap').classList.remove('show');
+    document.getElementById('scan-status-text').textContent = 'Searching archives...';
+    document.getElementById('progress-wrap').remove();
 
-    // Yield for 50ms so UI updates before heavy math freezes thread
+    // Render smooth transition loop 
     setTimeout(() => {
       const matches = findMatches(selfieDescriptors);
       document.getElementById('status-scanning').classList.remove('show');
@@ -668,7 +671,7 @@ async function captureAndSearch() {
 }
 
 // ══════════════════════════════════════
-//  FIND MATCHES (WITH DEDUPLICATION)
+//  MATCH RESOLUTION & DEDUPLICATION
 // ══════════════════════════════════════
 function findMatches(selfieDescriptors) {
   const bestMatches = {}; 
@@ -693,9 +696,6 @@ function findMatches(selfieDescriptors) {
   return matches;
 }
 
-// ══════════════════════════════════════
-//  DESCRIPTOR DISTANCE
-// ══════════════════════════════════════
 function distance(a, b) {
   let sum = 0;
   for (let i = 0; i < a.length; i++) {
@@ -706,7 +706,7 @@ function distance(a, b) {
 }
 
 // ══════════════════════════════════════
-//  SHOW MATCH RESULTS
+//  GALLERY RENDERING & SKELETON SHIMMER
 // ══════════════════════════════════════
 function showResults(matches) {
   document.getElementById('selfie-section').style.display = 'none';
@@ -721,34 +721,55 @@ function showResults(matches) {
     return;
   }
 
-  document.getElementById('results-count-badge').textContent = `${matches.length} photos found`;
-  document.getElementById('download-all-wrap').style.display = 'block';
+  // Trigger Celebration Confetti Drops
+  confetti({
+    particleCount: 140,
+    spread: 85,
+    origin: { y: 0.65 },
+    colors: ['#C9A84C', '#E8CC7A', '#FFFFFF', '#FAF5E9']
+  });
 
-  for (const match of matches) {
-    const thumbUrl = `https://drive.google.com/thumbnail?id=${match.driveId}&sz=w800`;
-    const viewUrl = `https://drive.google.com/file/d/${match.driveId}/view`;
-    const confidence = Math.max(0, Math.min(100, Math.round((1 - match.distance) * 100)));
-    
-    const card = document.createElement('div');
-    card.className = 'photo-item';
-    card.innerHTML = `
-      <img src="${thumbUrl}" alt="Memory" loading="lazy">
-      <div class="confidence">${confidence}%</div>
-      <a class="dl-btn" href="${viewUrl}" target="_blank" onclick="event.stopPropagation()">View</a>
-    `;
-
-    card.onclick = () => { openLightbox(thumbUrl, viewUrl); };
-    grid.appendChild(card);
+  // Inject Shimmering Skeleton Loader Placeholders
+  for (let i = 0; i < Math.min(4, matches.length); i++) {
+    const placeholder = document.createElement('div');
+    placeholder.className = 'skeleton-card';
+    grid.appendChild(placeholder);
   }
+
+  // Populate actual matched data post micro-shimmer paint cycle
+  setTimeout(() => {
+    grid.innerHTML = ''; 
+    document.getElementById('results-count-badge').textContent = `${matches.length} photos found`;
+    document.getElementById('download-all-wrap').style.display = 'block';
+
+    for (const match of matches) {
+      const thumbUrl = `https://drive.google.com/thumbnail?id=${match.driveId}&sz=w800`;
+      const viewUrl = `https://drive.google.com/file/d/${match.driveId}/view`;
+      const confidence = Math.max(0, Math.min(100, Math.round((1 - match.distance) * 100)));
+      
+      const card = document.createElement('div');
+      card.className = 'photo-item';
+      card.innerHTML = `
+        <img src="${thumbUrl}" alt="Memory" loading="lazy">
+        <div class="confidence">${confidence}%</div>
+      `;
+
+      card.onclick = () => { openLightbox(thumbUrl, viewUrl); };
+      grid.appendChild(card);
+    }
+  }, 400);
 }
   
 // ══════════════════════════════════════
-//  LIGHTBOX
+//  LIGHTBOX VIEW INTERACTS
 // ══════════════════════════════════════
 function openLightbox(imgUrl, viewUrl) {
   document.getElementById('lightbox-img').src = imgUrl;
   document.getElementById('lightbox-dl').href = viewUrl;
-  document.getElementById('lightbox-dl').innerText = 'View & Download Original';
+  
+  const shareText = encodeURIComponent(`Look at this beautiful memory from Dada & Dadi's Golden Jubilee! 💛 ${viewUrl}`);
+  document.getElementById('lightbox-wa').href = `https://api.whatsapp.com/send?text=${shareText}`;
+  
   document.getElementById('lightbox').classList.add('open');
 }
   
@@ -759,7 +780,7 @@ function closeLightbox(e) {
 }
 
 // ══════════════════════════════════════
-//  HELPERS
+//  STATE CONTROLS & RESETS
 // ══════════════════════════════════════
 function showStatus(id, msg, isError) {
   const el = document.getElementById(id);
@@ -795,24 +816,7 @@ async function retakeForNextSelfie() {
 }
 
 function resetSearch() {
-  document.getElementById('results-section').style.display = 'none';
-  document.getElementById('selfie-section').style.display = 'block';
-  document.getElementById('photos-grid').innerHTML = '';
-  document.getElementById('no-results').classList.remove('show');
-  document.getElementById('download-all-wrap').style.display = 'none';
-  document.getElementById('progress-wrap').classList.remove('show');
-  document.getElementById('camera-wrap').style.display = 'none';
-  document.getElementById('camera-placeholder').style.display = 'flex';
-  document.getElementById('btn-capture').style.display = 'none';
-  document.getElementById('btn-retake').style.display = 'none';
-  
-  selfieDescriptors = [];
-  currentSelfieStep = 0;
-  capturedImageData = null;
-  
-  document.getElementById('selfie-instruction').innerText = 'Look straight at the camera';
-  document.getElementById('selfie-instruction').style.display = 'none';
-  document.getElementById('btn-capture').innerText = '✦ Capture (1/3)';
+  location.reload(); // Hard refresh safely flushes WebGL buffers and matching objects completely
 }
 </script>
 </body>
